@@ -10,6 +10,7 @@
 import sys
 from pynlpl.statistics import FrequencyList, Distribution
 from pynlpl.textprocessors import Windower
+from networkx import DiGraph
 
 if len(sys.argv) < 2 or sys.argv[1] == "-h":
 	print >> sys.stderr, "Extract a phrase list (common n-grams) from a tokenised plain text corpus"
@@ -54,7 +55,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         if iteration == 1: linecount = i+1
         for ngram in Windower(line,n):
             if n - 1 in freqlist:
-                count = (ngram[-1:] in freqlist[n-1] and ngram[:-1] in freqlist[n-1])
+                count = (ngram[1:] in freqlist[n-1] and ngram[:-1] in freqlist[n-1])
             else:
                 count = True
             if count:
@@ -68,14 +69,25 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                 del freqlist[n][item]        
 
 
+compgraph = DiGraph()
+for n in freqlist:
+    print >>sys.stderr, "Computing compositionality graph (processing " +str(n) + "-grams)"
+    for ngram, count in freqlist[n]:
+        for n2 in range(MINLENGTH,n):
+            for subngram in Windower(ngram,n2):
+                if subngram in freqlist[n2]:
+                    compgraph.add_edge(subngram, ngram)        
+
 totalcount = sum([ len(f) for f in freqlist.values() ])
             
-print >>sys.stderr, "Outputting (unordered)"
+print >>sys.stderr, "Outputting"
+print '#N\tN-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT'
 for n in freqlist:
-    print '#N-GRAM\tN\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL'
     for ngram, count in freqlist[n]:
-        ngram_s = " ".join(ngram)    
-        print ngram_s + '\t' + str(len(ngram)) + '\t' + str(count) + '\t' + str(freqlist[n].p(ngram)) + '\t' + str(freqlist[n][ngram] / float(totalcount))
+        ngram_s = " ".join(ngram)        
+        subcount = len(compgraph.out_edges(ngram))
+        supercount = len(compgraph.in_edges(ngram))
+        print str(len(ngram)) + '\t' + ngram_s + '\t' + str(count) + '\t' + str(freqlist[n].p(ngram)) + '\t' + str(freqlist[n][ngram] / float(totalcount)) + '\t' + str(subcount) + '\t' + str(supercount)
 
 
 
