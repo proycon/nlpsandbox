@@ -9,6 +9,7 @@
 
 import sys
 from pynlpl.statistics import FrequencyList, Distribution
+from pynlpl.textprocessors import Windower
 
 if len(sys.argv) < 2 or sys.argv[1] == "-h":
 	print >> sys.stderr, "Extract a phrase list (common n-grams) from a tokenised plain text corpus"
@@ -38,34 +39,43 @@ else:
 f = open(sys.argv[1])
 freqlist = {}
 dist = {}
-linecount = 0
+iteration = 0
 for n in xrange(MINLENGTH,MAXLENGTH+1):
-    freqlist[n] = FrequencyList(n)
+    freqlist[n] = FrequencyList()
     print >> sys.stderr, "Counting ",n,"-grams ..."
     f.seek(0)
-    for i, line in enumerate(f):
+    iteration += 1
+    for i, line in enumerate(f):            
+        if (i % 10000 == 0): 
+            if iteration == 1:
+                print >>sys.stderr, "\tLine " + str(i+1) + " - (" + str(n) + "-grams)"
+            else:
+                print >>sys.stderr, "\tLine " + str(i+1) + " of " + str(linecount) + " - " + str( round(((i+1) / float(linecount)) * 100)) + "% " + " (" + str(n) + "-grams)"  
+        if iteration == 1: linecount = i+1
         for ngram in Windower(line,n):
-            if n - 1 in freqlists:
-                count = (ngram[-1:] in freqlists[n-1] and ngram[:-1] in freqlists[n-1])
+            if n - 1 in freqlist:
+                count = (ngram[-1:] in freqlist[n-1] and ngram[:-1] in freqlist[n-1])
             else:
                 count = True
             if count:
                 freqlist[n].count(ngram)
         
+            
     if MINOCCURRENCES > 1:
-        print >> sys.stderr, "Pruning..."
+        print >> sys.stderr, "Pruning " + str(n) + "-grams..."
         for item, count in freqlist[n]:
-            if count < MINOCCURENCES:
+            if count < MINOCCURRENCES:
                 del freqlist[n][item]        
 
 
 totalcount = sum([ len(f) for f in freqlist.values() ])
             
-print >> sys.stderr, "Outputting (unordered)"
+print >>sys.stderr, "Outputting (unordered)"
 for n in freqlist:
-    for ngram in freqlist[n]:
+    print '#N-GRAM\tN\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL'
+    for ngram, count in freqlist[n]:
         ngram_s = " ".join(ngram)    
-        print ngram_s + '\t' + str(freqlist[n][ngram]) + '\t' + str(freqlist[n].p(ngram)) + '\t' + str(freqlist[n][ngram] / float(totalcount))
+        print ngram_s + '\t' + str(len(ngram)) + '\t' + str(count) + '\t' + str(freqlist[n].p(ngram)) + '\t' + str(freqlist[n][ngram] / float(totalcount))
 
 
 
