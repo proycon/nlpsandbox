@@ -8,41 +8,90 @@
 # Extracts common phrases (n-grams) from one or more corpora
 
 import sys
+import codecs
 from pynlpl.statistics import FrequencyList, Distribution
-from pynlpl.textprocessors import Windower
+from pynlpl.textprocessors import Windower, crude_tokenizer
 from networkx import DiGraph
 
-if len(sys.argv) < 2 or sys.argv[1] == "-h":
-	print >> sys.stderr, "Extract a phrase list (common n-grams) from a tokenised plain text corpus"
-	print >> sys.stderr, "\tSyntax: pbmbmt-make-phraselist.py <corpus-file> [minoccurrences] [minlength] [maxlength]"
-	print >> sys.stderr, "\tDefaults: minimum occurrences = 2, mininum phrase length = 2, maximum phrase length = 10"
-	print >> sys.stderr, "\tOutput: phrase-count   phrase-frequency     n   phrase"
-	sys.exit(1)
+import getopt
+
+def usage():
+    print >> sys.stderr, "Extract a phrase list (common n-grams) from a tokenised plain text corpus"
+    print >> sys.stderr, "Syntax:  pbmbmt-make-phraselist.py"
+    print >> sys.stderr, "Options:"
+    print >> sys.stderr, "-f <corpus-file>                 - File name of the TOKENISED plain text corpus file to process"
+    print >> sys.stderr, "-t <minimal occurence threshold> - Value indicating the minimal occurence threshold for a n-gram, will be pruned otherwise (default: 2)"
+    print >> sys.stderr, "-T <minimal occurence threshold> - Value indicating the minimal occurence threshold for a skip-gram, will be pruned otherwise (default: 2)"
+    print >> sys.stderr, "-l <minimal length>              - Minimal length of n-grams (default: 2)"    
+    print >> sys.stderr, "-L <maximum length>              - Maximum length of n-grams (default: 6)"    
+    print >> sys.stderr, "-s                               - compute simple skipgrams (output in separate file)"    
+    print >> sys.stderr, "-c                               - compute compositional data"    
+    print >> sys.stderr, "-i                               - output index file (seperate file)"    
+    print >> sys.stderr, "-o <output prefix>               - path + filename, .phraselist extension will be added automatically. If not set, will be derived from input file."    
+    print >> sys.stderr, "-p                               - Input is not tokenised, apply crude built-in tokeniser."
+    print >> sys.stderr, "-e <encoding>                    - Encoding of input file (default: utf-8, note that output is always utf-8 regardless)"    
+    
 
 
+corpusfile = outputprefix = None
+MINOCCURRENCES = MINSKIPOCCURRENCES = 2
+MINLENGTH = 2
+MAXLENGTH = 6
+DOSKIPGRAMS = False
+DOCOMPOSITIONALITY = False
+DOTOKENIZE = False
+DOINDEX = False
+ENCODING = 'utf-8'
 
-if len(sys.argv) >= 3:
-	MINOCCURRENCES = int(sys.argv[2])
-else:
-    MINOCCURRENCES = 2
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "f:ht:T:l:L:sco:e:pi")
+except getopt.GetoptError, err:
+    print str(err)
+    usage()
+    sys.exit(2)
 
-if len(sys.argv) >= 4:
-	MINLENGTH = int(sys.argv[3])
-else:
-    MINLENGTH = 2
+for o, a in opts:
+    if o == '-f':
+        corpusfile = a
+    elif o == '-t':
+        MINOCCURRENCES = int(a)
+    elif o == '-T':
+        MINSKIPOCCURRENCES = int(a)    
+    elif o == '-l':
+        MINLENGTH = int(a)   
+    elif o == '-L':
+        MAXLENGTH = int(a)   
+    elif o == '-h':
+        usage()
+        sys.exit(0)
+    elif o == '-o':
+        outputprefix = a
+    elif o == '-s':
+        DOSKIPGRAMS = True
+    elif o == '-c':
+        DOCOMPOSITIONALITY = True    
+    elif o == '-e':
+        ENCODING = a
+    elif o == '-i':
+        DOINDEX = True
+    else:
+        raise Exception("No such option: " + o)
 
-if len(sys.argv) >= 5:
-	MAXLENGTH = int(sys.argv[4])
-else:
-    MAXLENGTH = 6
+if not corpusfile:
+	usage()
+	sys.exit(2)
 
+if not outputprefix:
+    outputprefix = corpusfile
 
-f = open(sys.argv[1])
+f = codecs.open(corpusfile,'r',ENCODING)
 freqlist = {}
+if DOSKIPGRAMS: simpleskipgrams = {} 
 dist = {}
 iteration = 0
 for n in xrange(MINLENGTH,MAXLENGTH+1):
     freqlist[n] = FrequencyList()
+    if DOSKIPGRAMS: simpleskipgrams[n] = FrequencyList()
     print >> sys.stderr, "Counting ",n,"-grams ..."
     f.seek(0)
     iteration += 1
@@ -53,6 +102,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
             else:
                 print >>sys.stderr, "\tLine " + str(i+1) + " of " + str(linecount) + " - " + str( round(((i+1) / float(linecount)) * 100)) + "% " + " (" + str(n) + "-grams)"  
         if iteration == 1: linecount = i+1
+        if DOTOKENIZE: line = crude_tokenizer(line)
         for ngram in Windower(line,n):
             if n - 1 in freqlist:
                 count = (ngram[1:] in freqlist[n-1] and ngram[:-1] in freqlist[n-1])
@@ -60,35 +110,67 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                 count = True
             if count:
                 freqlist[n].count(ngram)
-        
+                if DOSKIPGRAMS and n >= 3:
+                    simpleskipgrams[n].count( (ngram[0], ngram[-1]) ) 
+                    
+                    
             
     if MINOCCURRENCES > 1:
-        print >> sys.stderr, "Pruning " + str(n) + "-grams..."
-        for item, count in freqlist[n]:
+        print >>sys.stderr, "Pruning " + str(n) + "-grams..."
+        for ngram, count in freqlist[n]:
             if count < MINOCCURRENCES:
-                del freqlist[n][item]        
+                del freqlist[n][ngram]        
+                if DOSKIPGRAMS and (ngram[0], ngram[-1]) in simpleskipgrams[n] and simpleskipgrams[n][(ngram[0], ngram[-1])] == 1:
+                    #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
+                    del simpleskipgrams[n][(ngram[0], ngram[-1])]
+                        
+    
+if DOCOMPOSITIONALITY:
+    compgraph = DiGraph()
+    for n in freqlist:
+        print >>sys.stderr, "Computing compositionality graph (processing " +str(n) + "-grams)"
+        l = len(freqlist[n])
+        for i, (ngram, count) in enumerate(freqlist[n]):
+            if (i % 10000 == 0): 
+                print >>sys.stderr, '\t' + float(round((i/float(l))*100,2)) + '%'
+            for n2 in range(MINLENGTH,n):
+                for subngram in Windower(ngram,n2):
+                    if subngram in freqlist[n2]:
+                        compgraph.add_edge(subngram, ngram)        
 
 
-compgraph = DiGraph()
+totalcount = 0
 for n in freqlist:
-    print >>sys.stderr, "Computing compositionality graph (processing " +str(n) + "-grams)"
-    for ngram, count in freqlist[n]:
-        for n2 in range(MINLENGTH,n):
-            for subngram in Windower(ngram,n2):
-                if subngram in freqlist[n2]:
-                    compgraph.add_edge(subngram, ngram)        
-
-totalcount = sum([ len(f) for f in freqlist.values() ])
+    totalcount += sum([ len(f) for f in freqlist[n].values() ])
             
-print >>sys.stderr, "Outputting"
-print '#N\tN-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT'
+print >>sys.stderr, "Outputting n-grams"
+
+f = open(outputprefix + '.phraselist', 'w','utf-8')
+f.write('#N\tN-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
 for n in freqlist:
     for ngram, count in freqlist[n]:
         ngram_s = " ".join(ngram)        
-        subcount = len(compgraph.out_edges(ngram))
-        supercount = len(compgraph.in_edges(ngram))
-        print str(len(ngram)) + '\t' + ngram_s + '\t' + str(count) + '\t' + str(freqlist[n].p(ngram)) + '\t' + str(freqlist[n][ngram] / float(totalcount)) + '\t' + str(subcount) + '\t' + str(supercount)
+        if DOCOMPOSITIONALITY:
+            subcount = str(len(compgraph.out_edges(ngram)))
+            supercount = str(len(compgraph.in_edges(ngram)))
+        else:
+            subcount = '-'
+            supercount = '-'
+        f.write(str(len(ngram)) + '\t' + ngram_s + '\t' + str(count) + '\t' + str(freqlist[n].p(ngram)) + '\t' + str(freqlist[n][ngram] / float(totalcount)) + '\t' + subcount + '\t' + supercount + '\n')
 
+
+    
+if DOSKIPGRAMS:
+    totalskipgramcount = 0
+    for n in simpleskipgrams:
+        totalskipgramcount += sum([ len(f) for f in simpleskipgrams[n].values() ])
+    
+    f = open(outputprefix + '.skipgrams', 'w','utf-8')    
+    f.write('#N\tSKIP-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
+    for n in simpleskipgrams:
+        for skipgram, count in simpleskipgrams[n]:
+            skipgram = skipgram[0] + ' * ' + skipgram[1]
+            f.write(str(n) + '\t' + skipgram + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
 
 
 
