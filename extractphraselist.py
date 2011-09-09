@@ -139,7 +139,7 @@ if DOCOMPOSITIONALITY:
         l = len(freqlist[n])
         for i, (ngram, count) in enumerate(freqlist[n]):
             if (i % 10000 == 0): 
-                print >>sys.stderr, '\t' + float(round((i/float(l))*100,2)) + '%'
+                print >>sys.stderr, '\t' + str(float(round((i/float(l))*100,2))) + '%'
             for n2 in range(MINLENGTH,n):
                 for subngram in Windower(ngram,n2):
                     if subngram in freqlist[n2]:
