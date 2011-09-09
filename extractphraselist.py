@@ -145,7 +145,7 @@ if DOCOMPOSITIONALITY:
 
 totalcount = 0
 for n in freqlist:
-    totalcount += sum([ len(f) for f in freqlist[n].values() ])
+    totalcount += sum([ f for f in freqlist[n].values() ])
             
 print >>sys.stderr, "Outputting n-grams"
 
@@ -167,7 +167,7 @@ f.close()
 if DOSKIPGRAMS:
     totalskipgramcount = 0
     for n in simpleskipgrams:
-        totalskipgramcount += sum([ len(f) for f in simpleskipgrams[n].values() ])
+        totalskipgramcount += sum([ f for f in simpleskipgrams[n].values() ])
     
     f = open(outputprefix + '.skipgrams', 'w','utf-8')    
     f.write('#N\tSKIP-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
