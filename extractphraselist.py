@@ -176,6 +176,6 @@ if DOSKIPGRAMS:
             skipgram = skipgram[0] + ' * ' + skipgram[1]
             f.write(str(n-2) + '\t' + skipgram + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
 
-f.close()
+    f.close()
 
 
