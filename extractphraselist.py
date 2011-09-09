@@ -5,13 +5,13 @@
 #   http://proylt.anaproy.nl
 # Licensed under the GNU Public License v3
 # ---------------------------
-# Extracts common phrases (n-grams) from one or more corpora
+# Extracts common phrases (n-grams and simple skipgrams) from one or more corpora
 
 import sys
 import codecs
 from pynlpl.statistics import FrequencyList, Distribution
 from pynlpl.textprocessors import Windower, crude_tokenizer
-from networkx import DiGraph
+from networkx import DiGraph, write_gpickle
 
 import getopt
 
@@ -87,6 +87,7 @@ if not outputprefix:
 f = codecs.open(corpusfile,'r',ENCODING)
 freqlist = {}
 if DOSKIPGRAMS: simpleskipgrams = {} 
+if DOINDEX: index = {}
 dist = {}
 iteration = 0
 for n in xrange(MINLENGTH,MAXLENGTH+1):
@@ -145,12 +146,15 @@ if DOCOMPOSITIONALITY:
                     if subngram in freqlist[n2]:
                         compgraph.add_edge(subngram, ngram)        
 
+    print >>sys.stderr, "Writing compositionality graph to file"
+
+    write_gpickle(compgraph, outputprefix + '.compgraph')
 
 totalcount = 0
 for n in freqlist:
     totalcount += sum([ f for f in freqlist[n].values() ])
             
-print >>sys.stderr, "Outputting n-grams"
+print >>sys.stderr, "Writing n-grams to file"
 
 f = codecs.open(outputprefix + '.phraselist', 'w','utf-8')
 f.write('#N\tN-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
@@ -168,6 +172,7 @@ for n in freqlist:
 f.close()
     
 if DOSKIPGRAMS:
+    print >>sys.stderr, "Writing skip-grams to file"
     totalskipgramcount = 0
     for n in simpleskipgrams:
         totalskipgramcount += sum([ f for f in simpleskipgrams[n].values() ])
