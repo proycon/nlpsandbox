@@ -102,7 +102,10 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
             else:
                 print >>sys.stderr, "\tLine " + str(i+1) + " of " + str(linecount) + " - " + str( round(((i+1) / float(linecount)) * 100)) + "% " + " (" + str(n) + "-grams)"  
         if iteration == 1: linecount = i+1
-        if DOTOKENIZE: line = crude_tokenizer(line)
+        if DOTOKENIZE: 
+            line = crude_tokenizer(line)
+        else:
+            line = [ x for x in line.split(' ') if x ]
         for ngram in Windower(line,n):
             if n - 1 in freqlist:
                 count = (ngram[1:] in freqlist[n-1] and ngram[:-1] in freqlist[n-1])
@@ -149,7 +152,7 @@ for n in freqlist:
             
 print >>sys.stderr, "Outputting n-grams"
 
-f = open(outputprefix + '.phraselist', 'w','utf-8')
+f = codecs.open(outputprefix + '.phraselist', 'w','utf-8')
 f.write('#N\tN-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
 for n in freqlist:
     for ngram, count in freqlist[n]:
@@ -169,12 +172,12 @@ if DOSKIPGRAMS:
     for n in simpleskipgrams:
         totalskipgramcount += sum([ f for f in simpleskipgrams[n].values() ])
     
-    f = open(outputprefix + '.skipgrams', 'w','utf-8')    
+    f = codecs.open(outputprefix + '.skipgrams', 'w','utf-8')    
     f.write('#N\tSKIP-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
     for n in simpleskipgrams:
         for skipgram, count in simpleskipgrams[n]:
-            skipgram = skipgram[0] + ' * ' + skipgram[1]
-            f.write(str(n-2) + '\t' + skipgram + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
+            skipgram_s = skipgram[0] + ' * ' + skipgram[1]
+            f.write(str(n-2) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
 
     f.close()
 
