@@ -92,7 +92,7 @@ iteration = 0
 for n in xrange(MINLENGTH,MAXLENGTH+1):
     freqlist[n] = FrequencyList()
     if DOSKIPGRAMS: simpleskipgrams[n] = FrequencyList()
-    print >> sys.stderr, "Counting ",n,"-grams ..."
+    print >> sys.stderr, "Counting "+str(n)+"-grams ..."
     f.seek(0)
     iteration += 1
     for i, line in enumerate(f):            
@@ -123,7 +123,11 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                 if DOSKIPGRAMS and (ngram[0], ngram[-1]) in simpleskipgrams[n] and simpleskipgrams[n][(ngram[0], ngram[-1])] == 1:
                     #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
                     del simpleskipgrams[n][(ngram[0], ngram[-1])]
-                        
+    
+    if DOSKIPGRAMS:
+        print >>sys.stderr, "Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " simple skip-" + str(n-2) + "-grams"     
+    else:
+        print >>sys.stderr, "Found " + str(len(freqlist[n])) +  " + str(n)" + "-grams"         
     
 if DOCOMPOSITIONALITY:
     compgraph = DiGraph()
@@ -158,7 +162,7 @@ for n in freqlist:
             supercount = '-'
         f.write(str(len(ngram)) + '\t' + ngram_s + '\t' + str(count) + '\t' + str(freqlist[n].p(ngram)) + '\t' + str(freqlist[n][ngram] / float(totalcount)) + '\t' + subcount + '\t' + supercount + '\n')
 
-
+f.close()
     
 if DOSKIPGRAMS:
     totalskipgramcount = 0
@@ -170,8 +174,8 @@ if DOSKIPGRAMS:
     for n in simpleskipgrams:
         for skipgram, count in simpleskipgrams[n]:
             skipgram = skipgram[0] + ' * ' + skipgram[1]
-            f.write(str(n) + '\t' + skipgram + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
+            f.write(str(n-2) + '\t' + skipgram + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
 
-
+f.close()
 
 
