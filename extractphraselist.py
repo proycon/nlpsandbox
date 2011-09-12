@@ -24,7 +24,7 @@ def usage():
     print >> sys.stderr, "-T <minimal occurence threshold> - Value indicating the minimal occurence threshold for a skip-gram, will be pruned otherwise (default: 2)"
     print >> sys.stderr, "-l <minimal length>              - Minimal length of n-grams (default: 2)"    
     print >> sys.stderr, "-L <maximum length>              - Maximum length of n-grams (default: 6)"    
-    print >> sys.stderr, "-s                               - compute simple skipgrams (output in separate file)"    
+    print >> sys.stderr, "-s                               - compute simple skip-n-grams (output in separate file)"    
     print >> sys.stderr, "-c                               - compute compositional data"    
     print >> sys.stderr, "-i                               - output index file (seperate file)"    
     print >> sys.stderr, "-o <output prefix>               - path + filename, .phraselist extension will be added automatically. If not set, will be derived from input file."    
@@ -173,13 +173,13 @@ for n in freqlist:
 f.close()
     
 if DOSKIPGRAMS:
-    print >>sys.stderr, "Writing skip-grams to file"
+    print >>sys.stderr, "Writing skip-n-grams to file"
     totalskipgramcount = 0
     for n in simpleskipgrams:
         totalskipgramcount += sum([ f for f in simpleskipgrams[n].values() ])
     
     f = codecs.open(outputprefix + '.skipgrams', 'w','utf-8')    
-    f.write('#N\tSKIP-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
+    f.write('#N\tSKIP-N-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-SKIP-N-GRAM-CLASS\tNORMALISED-OVER-ALL')
     for n in simpleskipgrams:
         for skipgram, count in simpleskipgrams[n]:
             skipgram_s = skipgram[0] + ' * ' + skipgram[1]
