@@ -24,7 +24,7 @@ def usage():
     print >> sys.stderr, "-T <minimal occurence threshold> - Value indicating the minimal occurence threshold for a skip-gram, will be pruned otherwise (default: 2)"
     print >> sys.stderr, "-l <minimal length>              - Minimal length of n-grams (default: 2)"    
     print >> sys.stderr, "-L <maximum length>              - Maximum length of n-grams (default: 6)"    
-    #print >> sys.stderr, "-s                               - compute simple skipgrams (output in separate file)"    
+    print >> sys.stderr, "-s                               - compute simple skipgrams (output in separate file)"    
     print >> sys.stderr, "-c                               - compute compositional data"    
     print >> sys.stderr, "-i                               - output index file (seperate file)"    
     print >> sys.stderr, "-o <output prefix>               - path + filename, .phraselist extension will be added automatically. If not set, will be derived from input file."    
@@ -67,10 +67,7 @@ for o, a in opts:
     elif o == '-o':
         outputprefix = a
     elif o == '-s':
-        #DOSKIPGRAMS = True
-        print >>sys.stderr,"Skip grams not implemented!"
-        sys.exit(2)
-        pass
+        DOSKIPGRAMS = True
     elif o == '-c':
         DOCOMPOSITIONALITY = True    
     elif o == '-e':
@@ -95,7 +92,7 @@ dist = {}
 iteration = 0
 for n in xrange(MINLENGTH,MAXLENGTH+1):
     freqlist[n] = FrequencyList()
-    #if DOSKIPGRAMS: simpleskipgrams[n] = FrequencyList()
+    if DOSKIPGRAMS: simpleskipgrams[n] = FrequencyList()
     print >> sys.stderr, "Counting "+str(n)+"-grams ..."
     f.seek(0)
     iteration += 1
@@ -117,8 +114,8 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                 count = True
             if count:
                 freqlist[n].count(ngram)
-                #if DOSKIPGRAMS and n >= 3:
-                #    simpleskipgrams[n].count( (ngram[0], ngram[-1]) ) 
+                if DOSKIPGRAMS and n >= 3:
+                    simpleskipgrams[n].count( (ngram[0], ngram[-1]) ) 
                     
                     
             
@@ -127,9 +124,9 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         for ngram, count in freqlist[n]:
             if count < MINOCCURRENCES:
                 del freqlist[n][ngram]        
-                #if DOSKIPGRAMS and (ngram[0], ngram[-1]) in simpleskipgrams[n] and simpleskipgrams[n][(ngram[0], ngram[-1])] == 1:
-                #    #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
-                #    del simpleskipgrams[n][(ngram[0], ngram[-1])]
+                if DOSKIPGRAMS and (ngram[0], ngram[-1]) in simpleskipgrams[n] and simpleskipgrams[n][(ngram[0], ngram[-1])] == 1:
+                    #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
+                    del simpleskipgrams[n][(ngram[0], ngram[-1])]
     
     if DOSKIPGRAMS:
         print >>sys.stderr, "Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " simple skip-" + str(n-2) + "-grams"     
@@ -145,9 +142,9 @@ if DOCOMPOSITIONALITY:
             if (i % 10000 == 0): 
                 print >>sys.stderr, '\t' + str(float(round((i/float(l))*100,2))) + '%'
             for n2 in range(MINLENGTH,n):
-                for j, subngram in enumerate(Windower(ngram,n2, None, None)):
+                for subngram in Windower(ngram,n2):
                     if subngram in freqlist[n2]:
-                        compgraph.add_edge(subngram, ngram, position=j)        
+                        compgraph.add_edge(subngram, ngram)        
 
     print >>sys.stderr, "Writing compositionality graph to file"
 
@@ -174,19 +171,19 @@ for n in freqlist:
 
 f.close()
     
-#if DOSKIPGRAMS:
-#    print >>sys.stderr, "Writing skip-grams to file"
-#    totalskipgramcount = 0
-#    for n in simpleskipgrams:
-#        totalskipgramcount += sum([ f for f in simpleskipgrams[n].values() ])
-#    
-#    f = codecs.open(outputprefix + '.skipgrams', 'w','utf-8')    
-#    f.write('#N\tSKIP-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
-#    for n in simpleskipgrams:
-#        for skipgram, count in simpleskipgrams[n]:
-#            skipgram_s = skipgram[0] + ' * ' + skipgram[1]
-#            f.write(str(n-2) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
+if DOSKIPGRAMS:
+    print >>sys.stderr, "Writing skip-grams to file"
+    totalskipgramcount = 0
+    for n in simpleskipgrams:
+        totalskipgramcount += sum([ f for f in simpleskipgrams[n].values() ])
+    
+    f = codecs.open(outputprefix + '.skipgrams', 'w','utf-8')    
+    f.write('#N\tSKIP-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
+    for n in simpleskipgrams:
+        for skipgram, count in simpleskipgrams[n]:
+            skipgram_s = skipgram[0] + ' * ' + skipgram[1]
+            f.write(str(n-2) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
 
-#    f.close()
+    f.close()
 
 
