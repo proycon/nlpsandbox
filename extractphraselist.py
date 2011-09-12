@@ -104,9 +104,9 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                 print >>sys.stderr, "\tLine " + str(i+1) + " of " + str(linecount) + " - " + str( round(((i+1) / float(linecount)) * 100)) + "% " + " (" + str(n) + "-grams)"  
         if iteration == 1: linecount = i+1
         if DOTOKENIZE: 
-            line = crude_tokenizer(line)
+            line = crude_tokenizer(line.strip())
         else:
-            line = [ x for x in line.split(' ') if x ]
+            line = [ x for x in line.strip().split(' ') if x ]
         for ngram in Windower(line,n):
             if n - 1 in freqlist:
                 count = (ngram[1:] in freqlist[n-1] and ngram[:-1] in freqlist[n-1])
@@ -115,7 +115,8 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
             if count:
                 freqlist[n].count(ngram)
                 if DOSKIPGRAMS and n >= 3:
-                    simpleskipgrams[n].count( (ngram[0], ngram[-1]) ) 
+                    if ngram[0] != '<begin>' and ngram[1] != '<begin>' and ngram[0] != '<end>' and ngram[1] != '<end>':
+                        simpleskipgrams[n].count( (ngram[0], ngram[-1]) ) 
                     
                     
             
