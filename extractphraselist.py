@@ -124,7 +124,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         for ngram, count in freqlist[n]:
             if count < MINOCCURRENCES:
                 del freqlist[n][ngram]        
-                if DOSKIPGRAMS and (ngram[0], ngram[-1]) in simpleskipgrams[n] and simpleskipgrams[n][(ngram[0], ngram[-1])] == 1:
+                if DOSKIPGRAMS and (ngram[0], ngram[-1]) in simpleskipgrams[n] and simpleskipgrams[n][(ngram[0], ngram[-1])] <= count:
                     #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
                     del simpleskipgrams[n][(ngram[0], ngram[-1])]
     
