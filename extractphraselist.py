@@ -115,7 +115,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
             if count:
                 freqlist[n].count(ngram)
                 if DOSKIPGRAMS and n >= 3:
-                    if ngram[0] != '<begin>' and ngram[1] != '<begin>' and ngram[0] != '<end>' and ngram[1] != '<end>':
+                    if ngram[0] != '<begin>' and ngram[-1] != '<end>':
                         simpleskipgrams[n].count( (ngram[0], ngram[-1]) ) 
                     
                     
