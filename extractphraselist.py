@@ -14,6 +14,8 @@ from pynlpl.textprocessors import Windower, crude_tokenizer
 from networkx import DiGraph, write_gpickle
 
 import getopt
+import itertools
+import math
 
 def usage():
     print >> sys.stderr, "Extract a phrase list (common n-grams) from a tokenised plain text corpus"
@@ -86,13 +88,15 @@ if not outputprefix:
 
 f = codecs.open(corpusfile,'r',ENCODING)
 freqlist = {}
-if DOSKIPGRAMS: simpleskipgrams = {} 
 if DOINDEX: index = {}
+if DOSKIPGRAMS: simpleskipgrams = {}
 dist = {}
 iteration = 0
 for n in xrange(MINLENGTH,MAXLENGTH+1):
     freqlist[n] = FrequencyList()
-    if DOSKIPGRAMS: simpleskipgrams[n] = FrequencyList()
+    if DOSKIPGRAMS: 
+        simpleskipgrams[n] = {}
+        skips = {}
     print >> sys.stderr, "Counting "+str(n)+"-grams ..."
     f.seek(0)
     iteration += 1
@@ -114,25 +118,102 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                 count = True
             if count:
                 freqlist[n].count(ngram)
-                if DOSKIPGRAMS and n >= 3:
-                    if ngram[0] != '<begin>' and ngram[-1] != '<end>':
-                        simpleskipgrams[n].count( (ngram[0], ngram[-1]) ) 
+                if DOSKIPGRAMS and n >= 3 and ngram[0] != '<begin>' and ngram[-1] != '<end>':
+                    skipgram =  ( (ngram[0],) , (ngram[-1],) )
+                    body = tuple(ngram[1:-1])
+                    if not skipgram in simpleskipgrams[n]: #using None key for overall count to save computation time later
+                        simpleskipgrams[n][skipgram] = {None: 1}
+                    else:
+                        simpleskipgrams[n][skipgram][None] += 1
+                    if body in simpleskipgrams[n][skipgram]:
+                        simpleskipgrams[n][skipgram][body] += 1
+                    else:
+                        simpleskipgrams[n][skipgram][body] = 1
                     
-                    
-            
+                    #simpleskipgrams[n].count( skipgram )                     
+                    #try:
+                    #    skips[skipgram].append( ngram[1:-1] )
+                    #except:
+                    #    skips[skipgram] = [ ngram[1:-1] ]
+                            
     if MINOCCURRENCES > 1:
         print >>sys.stderr, "Pruning " + str(n) + "-grams..."
         for ngram, count in freqlist[n]:
             if count < MINOCCURRENCES:
                 del freqlist[n][ngram]        
-                if DOSKIPGRAMS and (ngram[0], ngram[-1]) in simpleskipgrams[n] and simpleskipgrams[n][(ngram[0], ngram[-1])] <= count:
-                    #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
-                    del simpleskipgrams[n][(ngram[0], ngram[-1])]
+                if DOSKIPGRAMS:
+                    skipgram = ( (ngram[0],) , (ngram[-1],) )
+                    if skipgram in simpleskipgrams[n] and simpleskipgrams[n][skipgram][None] <= count:
+                        #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
+                        del simpleskipgrams[n][skipgram]
+        
+                    
     
     if DOSKIPGRAMS:
-        print >>sys.stderr, "Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " simple skip-" + str(n-2) + "-grams"     
+        print >>sys.stderr, "Pruning skip-" + str(n) + "-grams..."
+        for skipgram, data in simpleskipgrams[n].items():
+            if len(data) - 1 == 1: #Minus the meta None/count entry
+                del simpleskipgrams[n][skipgram]
+        
+
+        print >>sys.stderr, "Expanding skip-" + str(n) + "-grams..."
+        #Expand skip-grams
+        expansionsize = 0
+        if n > 3:
+            cacheitems = list(simpleskipgrams[n].items())
+            for skipgram, data in cacheitems:
+                for skip, skipcount in data.items():            
+                    if skip:
+                        for skip2, skipcount2 in simpleskipgrams[n][skipgram].items():                        
+                            if skip != skip2 and skip2:
+                                overlapmask = [ w1 if w1 == w2 else None for w1,w2 in zip(skip,skip2) ]
+                                left = []
+                                right = []
+                                position = 0
+                                consecutive = True
+                                gap = 0
+                                prev = None
+                                gapbegin = 0
+                                gapsize = 1
+                                for i, w in enumerate(overlapmask):
+                                    if w:
+                                        if position == 0:
+                                            left.append(w)
+                                        elif position == 1:
+                                            right.append(w)                                    
+                                    else:
+                                        if position == 0:
+                                            gapbegin = i
+                                            position = 1
+                                        elif position == 1 and prev:
+                                            #multiple gaps
+                                            consecutive = False    
+                                            break
+                                        else:
+                                            gapsize += 1
+                                    prev = w
+                                    
+                                if not consecutive: continue
+                                
+                                #content of new gap
+                                newskip = skip2[gapbegin:gapbegin+gapsize]
+                        
+                                newskipgram = ( skipgram[0] + tuple(left), tuple(right) + skipgram[-1] )
+                                try:
+                                    simpleskipgrams[n][newskipgram][None] += 1
+                                except:
+                                    simpleskipgrams[n][newskipgram] = {None: 1}
+                                    expansionsize += 1
+                                try:
+                                    simpleskipgrams[n][newskipgram][newskip] += 1
+                                except:
+                                    simpleskipgrams[n][newskipgram][newskip] = 1
+
+                                
+                                                
+        print >>sys.stderr, "Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " skip-" + str(n) + "-grams, of which "+str(expansionsize) + " from expansion step)"             
     else:
-        print >>sys.stderr, "Found " + str(len(freqlist[n])) +  " + str(n)" + "-grams"         
+        print >>sys.stderr, "Found " + str(len(freqlist[n])) +  " " + str(n) + "-grams"         
     
 if DOCOMPOSITIONALITY:
     compgraph = DiGraph()
@@ -176,14 +257,23 @@ if DOSKIPGRAMS:
     print >>sys.stderr, "Writing skip-n-grams to file"
     totalskipgramcount = 0
     for n in simpleskipgrams:
-        totalskipgramcount += sum([ f for f in simpleskipgrams[n].values() ])
+        totalskipgramcount += sum( ( f[None] for f in simpleskipgrams[n].values()  ) )
     
     f = codecs.open(outputprefix + '.skipgrams', 'w','utf-8')    
-    f.write('#N\tSKIP-N-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-SKIP-N-GRAM-CLASS\tNORMALISED-OVER-ALL')
+    f.write('#N\tSKIP-N-GRAM\tOCCURRENCE-COUNT\tNORMALISED-OVER-ALL\tSKIPCONTENT-TYPES\tSKIPCONTENT-TOKENS\tSKIPCONTENT-ENTROPY\n')
     for n in simpleskipgrams:
-        for skipgram, count in simpleskipgrams[n]:
-            skipgram_s = skipgram[0] + ' * ' + skipgram[1]
-            f.write(str(n-2) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(simpleskipgrams[n].p(skipgram)) + '\t' + str(simpleskipgrams[n][skipgram] / float(totalskipgramcount)) + '\n')
+        for skipgram, data in simpleskipgrams[n].items():
+            count = data[None]
+            skipgram_s = " ".join(skipgram[0]) + " * " + " ".join(skipgram[-1])
+            totalskipcount = 0
+            skips = 0
+            entropy = 0
+            for skip, skipcount in data.items():
+                if skip:
+                    skips += 1
+                    totalskipcount += skipcount                                              
+                    entropy += skipcount * -math.log(skipcount)                                                          
+            f.write(str(n) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(count / float(totalskipgramcount)) + '\t' + str(skips) + '\t' + str(totalskipcount) + '\t' + str(entropy) + '\n')
 
     f.close()
 
