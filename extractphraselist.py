@@ -93,7 +93,7 @@ if DOSKIPGRAMS: simpleskipgrams = {}
 dist = {}
 iteration = 0
 for n in xrange(MINLENGTH,MAXLENGTH+1):
-    freqlist[n] = FrequencyList()
+    freqlist[n] = FrequencyList(None,True,False) #tokens=None, casesensitive=True, dovalidation=False
     if DOSKIPGRAMS: 
         simpleskipgrams[n] = {}
         skips = {}
@@ -150,18 +150,21 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                     
     
     if DOSKIPGRAMS:
-        print >>sys.stderr, "Pruning skip-" + str(n) + "-grams..."
-        for skipgram, data in simpleskipgrams[n].items():
+        l = len(simpleskipgrams[n])
+        print >>sys.stderr, "Pruning skip-" + str(n) + "-grams... (" +str(l)+")"
+        for i, (skipgram, data) in enumerate(simpleskipgrams[n].items()):
+            if i % 1000 == 0:  print >>sys.stderr, '\t\t@' + str(i)
             if len(data) - 1 == 1: #Minus the meta None/count entry
                 del simpleskipgrams[n][skipgram]
-        
+        print >>sys.stderr, "\t" +str(len(simpleskipgrams[n])) + " left after pruning"
 
         print >>sys.stderr, "Expanding skip-" + str(n) + "-grams..."
         #Expand skip-grams
         expansionsize = 0
         if n > 3:
             cacheitems = list(simpleskipgrams[n].items())
-            for skipgram, data in cacheitems:
+            for p, (skipgram, data) in enumerate(cacheitems):
+                if p % 1000 == 0:  print >>sys.stderr, '\t\t@' + str(p)
                 for skip, skipcount in data.items():            
                     if skip:
                         for skip2, skipcount2 in simpleskipgrams[n][skipgram].items():                        
@@ -210,7 +213,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                                     simpleskipgrams[n][newskipgram][newskip] = 1
 
                                 
-                                                
+        
         print >>sys.stderr, "Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " skip-" + str(n) + "-grams, of which "+str(expansionsize) + " from expansion step)"             
     else:
         print >>sys.stderr, "Found " + str(len(freqlist[n])) +  " " + str(n) + "-grams"         
