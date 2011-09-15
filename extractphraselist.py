@@ -27,8 +27,10 @@ def usage():
     print >> sys.stderr, "-l <minimal length>              - Minimal length of n-grams (default: 2)"    
     print >> sys.stderr, "-L <maximum length>              - Maximum length of n-grams (default: 6)"    
     print >> sys.stderr, "-s                               - compute simple skip-n-grams (output in separate file)"    
-    print >> sys.stderr, "-c                               - compute compositional data"    
-    print >> sys.stderr, "-i                               - output index file (seperate file)"    
+    print >> sys.stderr, "-C                               - use classer (saves memory and speeds up computation, but only when dealing with large data sets, outputs an extra .cls file)"
+    print >> sys.stderr, "-c                               - compute compositional data (memory intensive!)" 
+    print >> sys.stderr, "-I                               - maintain and output index file (separate file, memory intensive!)"    
+    print >> sys.stderr, "-S                               - Output all possible skips in .skipgram file (no significant cpu/memory cost)"    
     print >> sys.stderr, "-o <output prefix>               - path + filename, .phraselist extension will be added automatically. If not set, will be derived from input file."    
     print >> sys.stderr, "-p                               - Input is not tokenised, apply crude built-in tokeniser."
     print >> sys.stderr, "-e <encoding>                    - Encoding of input file (default: utf-8, note that output is always utf-8 regardless)"    
@@ -40,13 +42,15 @@ MINOCCURRENCES = MINSKIPOCCURRENCES = 2
 MINLENGTH = 2
 MAXLENGTH = 6
 DOSKIPGRAMS = False
+DOSKIPOUTPUT = False
 DOCOMPOSITIONALITY = False
 DOTOKENIZE = False
 DOINDEX = False
+DOCLASSER = False
 ENCODING = 'utf-8'
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "f:ht:T:l:L:sco:e:pi")
+    opts, args = getopt.getopt(sys.argv[1:], "f:ht:T:l:L:sco:e:pIC")
 except getopt.GetoptError, err:
     print str(err)
     usage()
@@ -72,10 +76,14 @@ for o, a in opts:
         DOSKIPGRAMS = True
     elif o == '-c':
         DOCOMPOSITIONALITY = True    
+    elif o == '-C':
+        DOCLASSER = True
     elif o == '-e':
         ENCODING = a
-    elif o == '-i':
+    elif o == '-I':
         DOINDEX = True
+    elif o == '-S':
+        DOSKIPOUTPUT = True
     else:
         raise Exception("No such option: " + o)
 
@@ -86,8 +94,28 @@ if not corpusfile:
 if not outputprefix:
     outputprefix = corpusfile
 
+if DOCLASSER:
+    print >> sys.stderr, "Counting unigrams (for classer) ..."
+    freqlist = FrequencyList
+    f = codecs.open(corpusfile,'r',ENCODING)
+    for i, line in enumerate(f):            
+        if (i % 10000 == 0): 
+            print >>sys.stderr, "\tLine " + str(i+1) + " - (classer construction)"
+        if DOTOKENIZE: 
+            line = crude_tokenizer(line.strip())
+        freqlist.append(line)
+    f.close()
+    
+    print >> sys.stderr, "Building classer ..."
+    classer = Classer(freqlist)
+    classer.save(outputprefix + '.cls')
+    
+
 f = codecs.open(corpusfile,'r',ENCODING)
-freqlist = {}
+if DOCLASSER and MINLENGTH <= 1:
+    freqlist = {1: freqlist}
+else:
+    freqlist = {}
 if DOINDEX: index = {}
 if DOSKIPGRAMS: simpleskipgrams = {}
 dist = {}
@@ -112,6 +140,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         else:
             line = [ x for x in line.strip().split(' ') if x ]
         for ngram in Windower(line,n):
+            if DOCLASSER: ngram = tuple(classer.encode(ngram))
             if n - 1 in freqlist:
                 count = (ngram[1:] in freqlist[n-1] and ngram[:-1] in freqlist[n-1])
             else:
@@ -245,7 +274,10 @@ f = codecs.open(outputprefix + '.phraselist', 'w','utf-8')
 f.write('#N\tN-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
 for n in freqlist:
     for ngram, count in freqlist[n]:
-        ngram_s = " ".join(ngram)        
+        if DOCLASSER:
+            ngram_s = " ".join(classer.decodeseq(ngram))        
+        else:
+            ngram_s = " ".join(ngram)        
         if DOCOMPOSITIONALITY:
             subcount = str(len(compgraph.out_edges(ngram)))
             supercount = str(len(compgraph.in_edges(ngram)))
@@ -263,20 +295,34 @@ if DOSKIPGRAMS:
         totalskipgramcount += sum( ( f[None] for f in simpleskipgrams[n].values()  ) )
     
     f = codecs.open(outputprefix + '.skipgrams', 'w','utf-8')    
-    f.write('#N\tSKIP-N-GRAM\tOCCURRENCE-COUNT\tNORMALISED-OVER-ALL\tSKIPCONTENT-TYPES\tSKIPCONTENT-TOKENS\tSKIPCONTENT-ENTROPY\n')
+    f.write('#N\tSKIP-N-GRAM\tOCCURRENCE-COUNT\tNORMALISED-OVER-ALL\tSKIPCONTENT-TYPES\tSKIPCONTENT-TOKENS\tSKIPCONTENT-ENTROPY\tSKIPS\n')
     for n in simpleskipgrams:
         for skipgram, data in simpleskipgrams[n].items():
             count = data[None]
-            skipgram_s = " ".join(skipgram[0]) + " * " + " ".join(skipgram[-1])
+            if DOCLASSER:
+                skipgram_s = " ".join(classer.decodeseq(skipgram[0])) + " * " + " ".join(classer.decodeseq(skipgram[-1]))
+            else:
+                skipgram_s = " ".join(skipgram[0]) + " * " + " ".join(skipgram[-1])
             totalskipcount = 0
             skips = 0
             entropy = 0
+            if DOSKIPOUTPUT:
+                skipoutput = ''
+            else:
+                skipoutput = '-'
             for skip, skipcount in data.items():
                 if skip:
                     skips += 1
                     totalskipcount += skipcount                                              
                     entropy += skipcount * -math.log(skipcount)                                                          
-            f.write(str(n) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(count / float(totalskipgramcount)) + '\t' + str(skips) + '\t' + str(totalskipcount) + '\t' + str(entropy) + '\n')
+                    if DOSKIPOUTPUT:
+                        if DOCLASSER:
+                            skipoutput += '_'.join(classer.decodeseq(skip)) + ' '
+                        else:
+                            skipoutput += '_'.join(skip) + ' '
+                        skipoutput = skipoutput.rstrip()
+            f.write(str(n) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(count / float(totalskipgramcount)) + '\t' + str(skips) + '\t' + str(totalskipcount) + '\t' + str(entropy) + '\t' + skipoutput + '\n')
+            
 
     f.close()
 
