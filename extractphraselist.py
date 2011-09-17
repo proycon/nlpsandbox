@@ -184,18 +184,18 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         l = len(simpleskipgrams[n])
         log("Pruning skip-" + str(n) + "-grams... (" +str(l)+")", stream=sys.stderr)
         for i, (skipgram, data) in enumerate(simpleskipgrams[n].items()):
-            if i % 10000 == 0:  print >>sys.stderr, '\t\t@' + str(i)
+            if i % 10000 == 0:  log('\t\t@' + str(i),stream=sys.stderr)
             if len(data) - 1 == 1: #Minus the meta None/count entry
                 del simpleskipgrams[n][skipgram]
-        print >>sys.stderr, "\t" +str(len(simpleskipgrams[n])) + " left after pruning"
+        log("\t" +str(len(simpleskipgrams[n])) + " left after pruning",stream=sys.stderr)
 
-        print >>sys.stderr, "Expanding skip-" + str(n) + "-grams..."
+        log("Expanding skip-" + str(n) + "-grams...",stream=sys.stderr)
         #Expand skip-grams
         expansionsize = 0
         if n > 3:
             cacheitems = list(simpleskipgrams[n].items())
             for p, (skipgram, data) in enumerate(cacheitems):
-                if p % 1000 == 0:  print >>sys.stderr, '\t\t@' + str(p)
+                if p % 1000 == 0:  log( '\t\t@' + str(p),stream=sys.stderr)
                 for skip, skipcount in data.items():            
                     if skip:
                         for skip2, skipcount2 in simpleskipgrams[n][skipgram].items():                        
@@ -256,7 +256,7 @@ if DOCOMPOSITIONALITY:
         l = len(freqlist[n])
         for i, (ngram, count) in enumerate(freqlist[n]):
             if (i % 10000 == 0): 
-                print >>sys.stderr, '\t' + str(float(round((i/float(l))*100,2))) + '%'
+                log('\t' + str(float(round((i/float(l))*100,2))) + '%',stream=sys.stderr)
             for n2 in range(MINLENGTH,n):
                 for subngram in Windower(ngram,n2):
                     if subngram in freqlist[n2]:
