@@ -41,7 +41,7 @@ def usage():
 
 
 corpusfile = outputprefix = None
-MINOCCURRENCES = MINSKIPGRAMOCCURENCES = MINSKIPOCCURRENCES =  MINSKIPTYPES = 2
+MINTOKENS = MINSKIPGRAMTOKENS= MINSKIPTOKENS =  MINSKIPTYPES = 2
 MINLENGTH = 2
 MAXLENGTH = 6
 DOSKIPGRAMS = False
@@ -63,7 +63,7 @@ for o, a in opts:
     if o == '-f':
         corpusfile = a
     elif o == '-t':
-        MINOCCURRENCES = int(a)
+        MINTOKENS = int(a)
     elif o == '-T':
         MINSKIPGRAMOCCURENCES = int(a)    
     elif o == '-Z':
@@ -173,10 +173,10 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                     #except:
                     #    skips[skipgram] = [ ngram[1:-1] ]
                             
-    if MINOCCURRENCES > 1:
+    if MINTOKENS > 1:
         log("Pruning " + str(n) + "-grams...", stream=sys.stderr)
         for ngram, count in freqlist[n]:
-            if count < MINOCCURRENCES:
+            if count < MINTOKENS:
                 del freqlist[n][ngram]        
                 if DOSKIPGRAMS:
                     skipgram = ( (ngram[0],) , (ngram[-1],) )
@@ -192,13 +192,13 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         for i, (skipgram, data) in enumerate(simpleskipgrams[n].items()):
             if i % 10000 == 0:  log('\t\t@' + str(i),stream=sys.stderr)
             typecount = len(data) - 1 #Minus the meta None/count entry
-            if typecount < MINSKIPTYPES or data[None] < MINSKIPGRAMOCCURRENCES:
+            if typecount < MINSKIPTYPES or data[None] < MINSKIPGRAMTOKENS:
                 prune = True
             else:
                 prune = False
                 cacheditems = data.items()
                 for skip,count in list(data.items()):
-                    if count < MINSKIPOCCURRENCES:
+                    if count < MINSKIPTOKENS:
                         #prune this skip-content only
                         del simpleskipgrams[n][skipgram][skip] 
                 del cacheditems
