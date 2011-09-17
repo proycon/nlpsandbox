@@ -9,8 +9,9 @@
 
 import sys
 import codecs
-from pynlpl.statistics import FrequencyList, Distribution
-from pynlpl.textprocessors import Windower, crude_tokenizer
+from pynlpl.statistics import FrequencyList
+from pynlpl.textprocessors import Windower, crude_tokenizer, Classer
+from pynlpl.common import log
 from networkx import DiGraph, write_gpickle
 
 import getopt
@@ -95,21 +96,22 @@ if not outputprefix:
     outputprefix = corpusfile
 
 if DOCLASSER:
-    print >> sys.stderr, "Counting unigrams (for classer) ..."
-    freqlist = FrequencyList
+    log("Counting unigrams (for classer) ...",stream=sys.stderr)
+    freqlist = FrequencyList()
     f = codecs.open(corpusfile,'r',ENCODING)
     for i, line in enumerate(f):            
         if (i % 10000 == 0): 
-            print >>sys.stderr, "\tLine " + str(i+1) + " - (classer construction)"
+            log("\tLine " + str(i+1) + " - (classer construction)", stream=sys.stderr)
         if DOTOKENIZE: 
             line = crude_tokenizer(line.strip())
-        freqlist.append(line)
+        line = line.strip().split(' ')
+        freqlist.append(['<begin>'] + line + ['<end>'])
     f.close()
     
-    print >> sys.stderr, "Building classer ..."
+    log("Building classer ...", stream=sys.stderr)
     classer = Classer(freqlist)
     classer.save(outputprefix + '.cls')
-    
+    log(sys.stderr, "\t" + str(len(classer)) + " classes found", stream=sys.stderr)
 
 f = codecs.open(corpusfile,'r',ENCODING)
 if DOCLASSER and MINLENGTH <= 1:
@@ -125,22 +127,22 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
     if DOSKIPGRAMS: 
         simpleskipgrams[n] = {}
         skips = {}
-    print >> sys.stderr, "Counting "+str(n)+"-grams ..."
+    log("Counting "+str(n)+"-grams ...", stream=sys.stderr)
     f.seek(0)
     iteration += 1
-    for i, line in enumerate(f):            
+    for i, line in enumerate(f):
         if (i % 10000 == 0): 
             if iteration == 1:
-                print >>sys.stderr, "\tLine " + str(i+1) + " - (" + str(n) + "-grams)"
+                log("\tLine " + str(i+1) + " - (" + str(n) + "-grams)", stream=sys.stderr)
             else:
-                print >>sys.stderr, "\tLine " + str(i+1) + " of " + str(linecount) + " - " + str( round(((i+1) / float(linecount)) * 100)) + "% " + " (" + str(n) + "-grams)"  
+                log("\tLine " + str(i+1) + " of " + str(linecount) + " - " + str( round(((i+1) / float(linecount)) * 100)) + "% " + " (" + str(n) + "-grams)" , stream=sys.stderr) 
         if iteration == 1: linecount = i+1
         if DOTOKENIZE: 
             line = crude_tokenizer(line.strip())
         else:
             line = [ x for x in line.strip().split(' ') if x ]
         for ngram in Windower(line,n):
-            if DOCLASSER: ngram = tuple(classer.encode(ngram))
+            if DOCLASSER: ngram = tuple(classer.encodeseq(ngram))
             if n - 1 in freqlist:
                 count = (ngram[1:] in freqlist[n-1] and ngram[:-1] in freqlist[n-1])
             else:
@@ -166,7 +168,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                     #    skips[skipgram] = [ ngram[1:-1] ]
                             
     if MINOCCURRENCES > 1:
-        print >>sys.stderr, "Pruning " + str(n) + "-grams..."
+        log("Pruning " + str(n) + "-grams...", stream=sys.stderr)
         for ngram, count in freqlist[n]:
             if count < MINOCCURRENCES:
                 del freqlist[n][ngram]        
@@ -180,9 +182,9 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
     
     if DOSKIPGRAMS:
         l = len(simpleskipgrams[n])
-        print >>sys.stderr, "Pruning skip-" + str(n) + "-grams... (" +str(l)+")"
+        log("Pruning skip-" + str(n) + "-grams... (" +str(l)+")", stream=sys.stderr)
         for i, (skipgram, data) in enumerate(simpleskipgrams[n].items()):
-            if i % 1000 == 0:  print >>sys.stderr, '\t\t@' + str(i)
+            if i % 10000 == 0:  print >>sys.stderr, '\t\t@' + str(i)
             if len(data) - 1 == 1: #Minus the meta None/count entry
                 del simpleskipgrams[n][skipgram]
         print >>sys.stderr, "\t" +str(len(simpleskipgrams[n])) + " left after pruning"
@@ -243,14 +245,14 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
 
                                 
         
-        print >>sys.stderr, "Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " skip-" + str(n) + "-grams, of which "+str(expansionsize) + " from expansion step)"             
+        log("Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " skip-" + str(n) + "-grams, of which "+str(expansionsize) + " from expansion step)", stream=sys.stderr)
     else:
-        print >>sys.stderr, "Found " + str(len(freqlist[n])) +  " " + str(n) + "-grams"         
+        log("Found " + str(len(freqlist[n])) +  " " + str(n) + "-grams", stream=sys.stderr)
     
 if DOCOMPOSITIONALITY:
     compgraph = DiGraph()
     for n in freqlist:
-        print >>sys.stderr, "Computing compositionality graph (processing " +str(n) + "-grams)"
+        log("Computing compositionality graph (processing " +str(n) + "-grams)", stream=sys.stderr)
         l = len(freqlist[n])
         for i, (ngram, count) in enumerate(freqlist[n]):
             if (i % 10000 == 0): 
@@ -260,7 +262,7 @@ if DOCOMPOSITIONALITY:
                     if subngram in freqlist[n2]:
                         compgraph.add_edge(subngram, ngram)        
 
-    print >>sys.stderr, "Writing compositionality graph to file"
+    log("Writing compositionality graph to file", stream=sys.stderr)
 
     write_gpickle(compgraph, outputprefix + '.compgraph')
 
@@ -268,7 +270,7 @@ totalcount = 0
 for n in freqlist:
     totalcount += sum([ f for f in freqlist[n].values() ])
             
-print >>sys.stderr, "Writing n-grams to file"
+log("Writing n-grams to file", stream=sys.stderr)
 
 f = codecs.open(outputprefix + '.phraselist', 'w','utf-8')
 f.write('#N\tN-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
@@ -289,7 +291,7 @@ for n in freqlist:
 f.close()
     
 if DOSKIPGRAMS:
-    print >>sys.stderr, "Writing skip-n-grams to file"
+    log("Writing skip-n-grams to file", stream=sys.stderr)
     totalskipgramcount = 0
     for n in simpleskipgrams:
         totalskipgramcount += sum( ( f[None] for f in simpleskipgrams[n].values()  ) )
