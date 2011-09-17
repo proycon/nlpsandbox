@@ -192,6 +192,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         for i, (skipgram, data) in enumerate(simpleskipgrams[n].items()):
             if i % 10000 == 0:  log('\t\t@' + str(i),stream=sys.stderr)
             typecount = len(data) - 1 #Minus the meta None/count entry
+            prune = False
             if typecount < MINSKIPTYPES or data[None] < MINSKIPGRAMTOKENS:
                 prune = True
             else:
