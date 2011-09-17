@@ -23,8 +23,10 @@ def usage():
     print >> sys.stderr, "Syntax:  pbmbmt-make-phraselist.py"
     print >> sys.stderr, "Options:"
     print >> sys.stderr, "-f <corpus-file>                 - File name of the TOKENISED plain text corpus file to process"
-    print >> sys.stderr, "-t <minimal occurence threshold> - Value indicating the minimal occurence threshold for a n-gram, will be pruned otherwise (default: 2)"
-    print >> sys.stderr, "-T <minimal occurence threshold> - Value indicating the minimal occurence threshold for a skip-gram, will be pruned otherwise (default: 2)"
+    print >> sys.stderr, "-t <minimal occurence threshold> - Value indicating the minimal occurence threshold for a n-gram, will be pruned otherwise (default: 2 tokens)"
+    print >> sys.stderr, "-T <minimal occurence threshold> - Value indicating the minimal occurence threshold for a skip-gram (total tokens), will be pruned otherwise (default: 2 tokens)"
+    print >> sys.stderr, "-Z <minimal occurence threshold> - Value indicating the minimal occurence threshold for a skip in a skip-gram (token per skip), will be pruned otherwise (default: 2 tokens)"
+    print >> sys.stderr, "-D <minimal types threshold>     - Value indicating the minimal diversity for a skip-gram (types), will be pruned otherwise (default: at least 2 types)"
     print >> sys.stderr, "-l <minimal length>              - Minimal length of n-grams (default: 2)"    
     print >> sys.stderr, "-L <maximum length>              - Maximum length of n-grams (default: 6)"    
     print >> sys.stderr, "-s                               - compute simple skip-n-grams (output in separate file)"    
@@ -39,7 +41,7 @@ def usage():
 
 
 corpusfile = outputprefix = None
-MINOCCURRENCES = MINSKIPOCCURRENCES = 2
+MINOCCURRENCES = MINSKIPGRAMOCCURENCES = MINSKIPOCCURRENCES =  MINSKIPTYPES = 2
 MINLENGTH = 2
 MAXLENGTH = 6
 DOSKIPGRAMS = False
@@ -51,7 +53,7 @@ DOCLASSER = False
 ENCODING = 'utf-8'
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "f:ht:T:l:L:sco:e:pIC")
+    opts, args = getopt.getopt(sys.argv[1:], "f:ht:T:Z:l:L:sco:e:pICD:")
 except getopt.GetoptError, err:
     print str(err)
     usage()
@@ -63,7 +65,11 @@ for o, a in opts:
     elif o == '-t':
         MINOCCURRENCES = int(a)
     elif o == '-T':
-        MINSKIPOCCURRENCES = int(a)    
+        MINSKIPGRAMOCCURENCES = int(a)    
+    elif o == '-Z':
+        MINSKIPOCCURENCES = int(a)            
+    elif o == '-D':
+        MINSKIPTYPES = int(a)
     elif o == '-l':
         MINLENGTH = int(a)   
     elif o == '-L':
@@ -185,7 +191,18 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         log("Pruning skip-" + str(n) + "-grams... (" +str(l)+")", stream=sys.stderr)
         for i, (skipgram, data) in enumerate(simpleskipgrams[n].items()):
             if i % 10000 == 0:  log('\t\t@' + str(i),stream=sys.stderr)
-            if len(data) - 1 == 1: #Minus the meta None/count entry
+            typecount = len(data) - 1 #Minus the meta None/count entry
+            if typecount < MINSKIPTYPES or data[None] < MINSKIPGRAMOCCURRENCES:
+                prune = True
+            else:
+                prune = False
+                cacheditems = data.items()
+                for skip,count in list(data.items()):
+                    if count < MINSKIPOCCURRENCES:
+                        #prune this skip-content only
+                        del simpleskipgrams[n][skipgram][skip] 
+                del cacheditems
+            if prune:
                 del simpleskipgrams[n][skipgram]
         log("\t" +str(len(simpleskipgrams[n])) + " left after pruning",stream=sys.stderr)
 
