@@ -195,13 +195,22 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
             if typecount < MINSKIPTYPES or data[None] < MINSKIPGRAMTOKENS:
                 prune = True
             else:
-                prune = False
                 cacheditems = data.items()
+                modified = False
                 for skip,count in list(data.items()):
                     if count < MINSKIPTOKENS:
+                        modified = True
                         #prune this skip-content only
+                        data[None] -= count
                         del simpleskipgrams[n][skipgram][skip] 
                 del cacheditems
+                
+                if modified:
+                    #recompute, things have changed
+                    typecount = len(simpleskipgrams[n][skipgram]) - 1 #Minus the meta None/count entry
+                    if typecount < MINSKIPTYPES or data[None] < MINSKIPGRAMTOKENS:
+                        prune = True
+
             if prune:
                 del simpleskipgrams[n][skipgram]
         log("\t" +str(len(simpleskipgrams[n])) + " left after pruning",stream=sys.stderr)
