@@ -195,9 +195,9 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         if n > 3:
             cacheitems = list(simpleskipgrams[n].items())
             for p, (skipgram, data) in enumerate(cacheitems):
-                if p % 1000 == 0:  log( '\t\t@' + str(p),stream=sys.stderr)
+                if p % 1000 == 0:  log( '\t\t@' + str(p) + ' - ' + str(expansionsize) + ' new skip-grams thus-far',stream=sys.stderr)
                 if len(data.items) ** 2 >= 1000000:
-                    log( '\t\t@' + str(p) + ' -- ' + str(len(data.items) ** 2) + ' comparisons',stream=sys.stderr)
+                    log( '\t\t\t@' + str(p) + ' -- ' + str(len(data.items) ** 2) + ' comparisons',stream=sys.stderr)
                 for skip, skipcount in data.items():            
                     if skip:
                         for skip2, skipcount2 in simpleskipgrams[n][skipgram].items():                        
