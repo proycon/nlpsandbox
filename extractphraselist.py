@@ -111,7 +111,7 @@ if DOCLASSER:
     log("Building classer ...", stream=sys.stderr)
     classer = Classer(freqlist)
     classer.save(outputprefix + '.cls')
-    log(sys.stderr, "\t" + str(len(classer)) + " classes found", stream=sys.stderr)
+    log("\t" + str(len(classer)) + " classes found", stream=sys.stderr)
 
 f = codecs.open(corpusfile,'r',ENCODING)
 if DOCLASSER and MINLENGTH <= 1:
