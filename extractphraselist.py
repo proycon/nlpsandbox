@@ -196,11 +196,11 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
             cacheitems = list(simpleskipgrams[n].items())
             for p, (skipgram, data) in enumerate(cacheitems):
                 if p % 1000 == 0:  log( '\t\t@' + str(p) + ' - ' + str(expansionsize) + ' new skip-grams thus-far',stream=sys.stderr)
-                if len(data.items) ** 2 >= 1000000:
-                    log( '\t\t\t@' + str(p) + ' -- ' + str(len(data.items) ** 2) + ' comparisons',stream=sys.stderr)
+                if len(data) ** 2 >= 1000000:
+                    log( '\t\t\t@' + str(p) + ' -- ' + str(len(data) ** 2) + ' comparisons',stream=sys.stderr)
                 for skip, skipcount in data.items():            
                     if skip:
-                        for skip2, skipcount2 in simpleskipgrams[n][skipgram].items():                        
+                        for skip2, skipcount2 in data.items():                        
                             if skip != skip2 and skip2:
                                 overlapmask = [ w1 if w1 == w2 else None for w1,w2 in zip(skip,skip2) ]
                                 left = []
@@ -245,7 +245,8 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                                 except:
                                     simpleskipgrams[n][newskipgram][newskip] = 1
 
-                                
+                if len(data) ** 2 >= 1000000:
+                    log( '\t\t\t(next)',stream=sys.stderr)               
         
         log("Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " skip-" + str(n) + "-grams, of which "+str(expansionsize) + " from expansion step)", stream=sys.stderr)
     else:
