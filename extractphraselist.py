@@ -30,6 +30,7 @@ def usage():
     print >> sys.stderr, "-l <minimal length>              - Minimal length of n-grams (default: 2)"    
     print >> sys.stderr, "-L <maximum length>              - Maximum length of n-grams (default: 6)"    
     print >> sys.stderr, "-s                               - compute simple skip-n-grams (output in separate file)"    
+    print >> sys.stderr, "-E                               - Enable skip-gram expansion, computes more complex skip-grams (cpu/mem intensive)"    
     print >> sys.stderr, "-C                               - use classer (saves memory and speeds up computation, but only when dealing with large data sets, outputs an extra .cls file)"
     print >> sys.stderr, "-c                               - compute compositional data (memory intensive!)" 
     print >> sys.stderr, "-I                               - maintain and output index file (separate file, memory intensive!)"    
@@ -37,6 +38,7 @@ def usage():
     print >> sys.stderr, "-o <output prefix>               - path + filename, .phraselist extension will be added automatically. If not set, will be derived from input file."    
     print >> sys.stderr, "-p                               - Input is not tokenised, apply crude built-in tokeniser."
     print >> sys.stderr, "-e <encoding>                    - Encoding of input file (default: utf-8, note that output is always utf-8 regardless)"    
+    
     
 
 
@@ -50,10 +52,11 @@ DOCOMPOSITIONALITY = False
 DOTOKENIZE = False
 DOINDEX = False
 DOCLASSER = False
+DOSKIPGRAMEXPANSION = False
 ENCODING = 'utf-8'
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "f:ht:T:Z:l:L:sco:e:pICD:")
+    opts, args = getopt.getopt(sys.argv[1:], "f:ht:T:Z:l:L:sco:e:pICD:E")
 except getopt.GetoptError, err:
     print str(err)
     usage()
@@ -70,6 +73,8 @@ for o, a in opts:
         MINSKIPOCCURENCES = int(a)            
     elif o == '-D':
         MINSKIPTYPES = int(a)
+    elif o == '-E':
+        DOSKIPGRAMEXPANSION = True
     elif o == '-l':
         MINLENGTH = int(a)   
     elif o == '-L':
@@ -318,10 +323,11 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
     if DOSKIPGRAMS:
         pruneskipgrams(n, simpleskipgrams, skips)
         
-        #Expand skip-grams
-        expansionsize = 0
-        if n > 3:
-            expandskipgrams(n, simpleskipgrams, skips)
+        if DOSKIPGRAMEXPANSION:
+            #Expand skip-grams
+            expansionsize = 0
+            if n > 3:
+                expandskipgrams(n, simpleskipgrams, skips)
             
     
 if DOCOMPOSITIONALITY:
