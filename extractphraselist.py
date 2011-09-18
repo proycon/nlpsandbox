@@ -207,7 +207,7 @@ def pruneskipgrams(n, simpleskipgrams, skips):
                 if modified:
                     #recompute, things have changed
                     typecount = len(simpleskipgrams[n][skipgram]) - 1 #Minus the meta None/count entry
-                    if typecount < MINSKIPTYPES or datasimpleskipgrams[n][skipgram][None] < MINSKIPGRAMTOKENS:
+                    if typecount < MINSKIPTYPES or simpleskipgrams[n][skipgram][None] < MINSKIPGRAMTOKENS:
                         prune = True
 
             if prune:
