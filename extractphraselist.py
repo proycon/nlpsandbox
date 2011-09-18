@@ -101,7 +101,9 @@ if not corpusfile:
 if not outputprefix:
     outputprefix = corpusfile
 
-if DOCLASSER:
+
+def buildclasser():
+    global DOTOKENIZE, ENCODING, outputprefix
     log("Counting unigrams (for classer) ...",stream=sys.stderr)
     freqlist = FrequencyList()
     f = codecs.open(corpusfile,'r',ENCODING)
@@ -118,31 +120,18 @@ if DOCLASSER:
     classer = Classer(freqlist)
     classer.save(outputprefix + '.cls')
     log("\t" + str(len(classer)) + " classes found", stream=sys.stderr)
+    return classer    
 
-f = codecs.open(corpusfile,'r',ENCODING)
-if DOCLASSER and MINLENGTH <= 1:
-    freqlist = {1: freqlist}
-else:
-    freqlist = {}
-if DOINDEX: index = {}
-if DOSKIPGRAMS: simpleskipgrams = {}
-dist = {}
-iteration = 0
-for n in xrange(MINLENGTH,MAXLENGTH+1):
-    freqlist[n] = FrequencyList(None,True,False) #tokens=None, casesensitive=True, dovalidation=False
-    if DOSKIPGRAMS: 
-        simpleskipgrams[n] = {}
-        skips = {}
+def countngrams(classer, n, freqlist, simpleskipgrams, skips, linecount=0):
+    global DOTOKENIZE, DOCLASSER, DOSKIPGRAMS
     log("Counting "+str(n)+"-grams ...", stream=sys.stderr)
     f.seek(0)
-    iteration += 1
     for i, line in enumerate(f):
         if (i % 10000 == 0): 
-            if iteration == 1:
+            if linecount == 0:
                 log("\tLine " + str(i+1) + " - (" + str(n) + "-grams)", stream=sys.stderr)
             else:
                 log("\tLine " + str(i+1) + " of " + str(linecount) + " - " + str( round(((i+1) / float(linecount)) * 100)) + "% " + " (" + str(n) + "-grams)" , stream=sys.stderr) 
-        if iteration == 1: linecount = i+1
         if DOTOKENIZE: 
             line = crude_tokenizer(line.strip())
         else:
@@ -172,21 +161,25 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
                     #    skips[skipgram].append( ngram[1:-1] )
                     #except:
                     #    skips[skipgram] = [ ngram[1:-1] ]
-                            
-    if MINTOKENS > 1:
-        log("Pruning " + str(n) + "-grams...", stream=sys.stderr)
-        for ngram, count in freqlist[n]:
-            if count < MINTOKENS:
-                del freqlist[n][ngram]        
-                if DOSKIPGRAMS:
-                    skipgram = ( (ngram[0],) , (ngram[-1],) )
-                    if skipgram in simpleskipgrams[n] and simpleskipgrams[n][skipgram][None] <= count:
-                        #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
-                        del simpleskipgrams[n][skipgram]
-        
-                    
+    log("Found " + str(len(freqlist[n])) +  " " + str(n) + "-grams", stream=sys.stderr)                    
+    return i+1
     
-    if DOSKIPGRAMS:
+def prunengrams(n, freqlist, simpleskipgrams):
+    global DOTOKENIZE, DOCLASSER, DOSKIPGRAMS, MINTOKENS
+    log("Pruning " + str(n) + "-grams...", stream=sys.stderr)
+    for ngram, count in freqlist[n]:
+        if count < MINTOKENS:
+            del freqlist[n][ngram]        
+            if DOSKIPGRAMS:
+                skipgram = ( (ngram[0],) , (ngram[-1],) )
+                if skipgram in simpleskipgrams[n] and simpleskipgrams[n][skipgram][None] <= count:
+                    #note: if skip-grams are not found on the same n-level, they are pruned because of this early-pruning
+                    del simpleskipgrams[n][skipgram]   
+                    
+    log("Retained " + str(len(freqlist[n])) +  " " + str(n) + "-grams after pruning", stream=sys.stderr)                    
+    
+def pruneskipgrams(n, simpleskipgrams, skips):
+        global MINSKIPTYPES, MINSKIPGRAMTOKENS, MINSKIPTOKENS
         l = len(simpleskipgrams[n])
         log("Pruning skip-" + str(n) + "-grams... (" +str(l)+")", stream=sys.stderr)
         for i, (skipgram, data) in enumerate(simpleskipgrams[n].items()):
@@ -215,71 +208,72 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
             if prune:
                 del simpleskipgrams[n][skipgram]
         log("\t" +str(len(simpleskipgrams[n])) + " left after pruning",stream=sys.stderr)
-
-        log("Expanding skip-" + str(n) + "-grams...",stream=sys.stderr)
-        #Expand skip-grams
-        expansionsize = 0
-        if n > 3:
-            cacheitems = list(simpleskipgrams[n].items())
-            for p, (skipgram, data) in enumerate(cacheitems):
-                if p % 1000 == 0:  log( '\t\t@' + str(p) + ' - ' + str(expansionsize) + ' new skip-grams thus-far',stream=sys.stderr)
-                if len(data) ** 2 >= 1000000:
-                    log( '\t\t\t@' + str(p) + ' -- ' + str(len(data) ** 2) + ' comparisons',stream=sys.stderr)
-                for skip, skipcount in data.items():            
-                    if skip:
-                        for skip2, skipcount2 in data.items():                        
-                            if skip != skip2 and skip2:
-                                overlapmask = [ w1 if w1 == w2 else None for w1,w2 in zip(skip,skip2) ]
-                                left = []
-                                right = []
-                                position = 0
-                                consecutive = True
-                                gap = 0
-                                prev = None
-                                gapbegin = 0
-                                gapsize = 1
-                                for i, w in enumerate(overlapmask):
-                                    if w:
-                                        if position == 0:
-                                            left.append(w)
-                                        elif position == 1:
-                                            right.append(w)                                    
-                                    else:
-                                        if position == 0:
-                                            gapbegin = i
-                                            position = 1
-                                        elif position == 1 and prev:
-                                            #multiple gaps
-                                            consecutive = False    
-                                            break
-                                        else:
-                                            gapsize += 1
-                                    prev = w
-                                    
-                                if not consecutive: continue
-                                
-                                #content of new gap
-                                newskip = skip2[gapbegin:gapbegin+gapsize]
-                        
-                                newskipgram = ( skipgram[0] + tuple(left), tuple(right) + skipgram[-1] )
-                                try:
-                                    simpleskipgrams[n][newskipgram][None] += 1
-                                except:
-                                    simpleskipgrams[n][newskipgram] = {None: 1}
-                                    expansionsize += 1
-                                try:
-                                    simpleskipgrams[n][newskipgram][newskip] += 1
-                                except:
-                                    simpleskipgrams[n][newskipgram][newskip] = 1
-
-                if len(data) ** 2 >= 1000000:
-                    log( '\t\t\t(next)',stream=sys.stderr)               
-        
-        log("Found " + str(len(freqlist[n])) + " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " skip-" + str(n) + "-grams, of which "+str(expansionsize) + " from expansion step)", stream=sys.stderr)
-    else:
-        log("Found " + str(len(freqlist[n])) +  " " + str(n) + "-grams", stream=sys.stderr)
     
-if DOCOMPOSITIONALITY:
+def expandskipgrams(n, simpleskipgrams, skips):
+    log("Expanding skip-" + str(n) + "-grams...",stream=sys.stderr)
+    cacheitems = list(simpleskipgrams[n].items())
+    expansionsize = 0
+    for p, (skipgram, data) in enumerate(cacheitems):
+        if p % 1000 == 0:  log( '\t\t@' + str(p) + ' - ' + str(expansionsize) + ' new skip-grams thus-far',stream=sys.stderr)
+        if len(data) ** 2 >= 1000000:
+            log( '\t\t\t@' + str(p) + ' -- ' + str(len(data)**2) + ' comparisons',stream=sys.stderr)
+
+        processed = {}
+        skipdata = data.items()
+        for skip, skipcount in skipdata:            
+            if skip:
+                for skip2, skipcount2 in skipdata:                        
+                    if skip != skip2 and skip2 and not (skip2,skip) in processed:
+                        processed[(skip,skip2)] = True
+                        left = []
+                        right = []
+                        position = 0
+                        consecutive = True
+                        gap = 0
+                        prev = None
+                        gapbegin = 0
+                        gapsize = 1
+                        for i in xrange(0,len(skip)):
+                            w = skip[i]
+                            if w == skip2[i]:
+                                if position == 0:
+                                    left.append(w)
+                                elif position == 1:
+                                    right.append(w)                                    
+                            else:
+                                if position == 0:
+                                    gapbegin = i
+                                    position = 1
+                                elif position == 1 and prev:
+                                    #multiple gaps
+                                    consecutive = False    
+                                    break
+                                else:
+                                    gapsize += 1
+                            prev = w
+                            
+                        if not consecutive: continue
+                        
+                        #content of new gap
+                        newskip = skip2[gapbegin:gapbegin+gapsize]
+                
+                        newskipgram = ( skipgram[0] + tuple(left), tuple(right) + skipgram[-1] )
+                        try:
+                            simpleskipgrams[n][newskipgram][None] += 1
+                        except:
+                            simpleskipgrams[n][newskipgram] = {None: 1}
+                            expansionsize += 1
+                        try:
+                            simpleskipgrams[n][newskipgram][newskip] += 1
+                        except:
+                            simpleskipgrams[n][newskipgram][newskip] = 1
+
+        if len(data) ** 2 >= 1000000:
+            log( '\t\t\t(next)',stream=sys.stderr)               
+
+    log("Found " + str(len(simpleskipgrams[n])) + " skip-" + str(n) + "-grams, of which "+str(expansionsize) + " from expansion step)", stream=sys.stderr)
+    
+def buildcompgraph(freqlist):
     compgraph = DiGraph()
     for n in freqlist:
         log("Computing compositionality graph (processing " +str(n) + "-grams)", stream=sys.stderr)
@@ -295,6 +289,46 @@ if DOCOMPOSITIONALITY:
     log("Writing compositionality graph to file", stream=sys.stderr)
 
     write_gpickle(compgraph, outputprefix + '.compgraph')
+    return compgraph
+
+if DOCLASSER:
+    classer = buildclasser()
+
+f = codecs.open(corpusfile,'r',ENCODING)
+freqlist = {}
+if DOINDEX: index = {}
+simpleskipgrams = {}
+linecount = 0
+for n in xrange(MINLENGTH,MAXLENGTH+1):
+    
+    freqlist[n] = FrequencyList(None,True,False) #tokens=None, casesensitive=True, dovalidation=False
+
+    simpleskipgrams[n] = {}
+    skips = {}
+    
+    #Count n-grams
+    linecount = countngrams(classer, n, freqlist, simpleskipgrams, skips)
+                            
+    if MINTOKENS > 1:
+        #prune n-grams
+        prunengrams(n, freqlist, simpleskipgrams)
+    
+    
+
+    if DOSKIPGRAMS:
+        pruneskipgrams(n, simpleskipgrams, skips)
+        
+        #Expand skip-grams
+        expansionsize = 0
+        if n > 3:
+            expandskipgrams(n, simpleskipgrams, skips)
+            
+    
+if DOCOMPOSITIONALITY:
+    compgraph = buildcompgraph(freqlist)
+    
+
+
 
 totalcount = 0
 for n in freqlist:
