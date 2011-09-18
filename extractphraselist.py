@@ -200,7 +200,7 @@ def pruneskipgrams(n, simpleskipgrams, skips):
                     if count < MINSKIPTOKENS:
                         modified = True
                         #prune this skip-content only
-                        datasimpleskipgrams[n][skipgram][None] -= count
+                        simpleskipgrams[n][skipgram][None] -= count
                         del simpleskipgrams[n][skipgram][skip] 
                 del cacheditems
                 
