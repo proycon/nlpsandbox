@@ -328,6 +328,9 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
             expansionsize = 0
             if n > 3:
                 expandskipgrams(n, simpleskipgrams, skips)
+                
+                pruneskipgrams(n, simpleskipgrams, skips)
+        
             
     
 if DOCOMPOSITIONALITY:
