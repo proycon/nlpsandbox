@@ -162,9 +162,16 @@ def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0
                     else:
                         simpleskipgrams[n][skipgram][None] += 1
                     if body in simpleskipgrams[n][skipgram]:
-                        simpleskipgrams[n][skipgram][body] += 1
+                        if DOINDEX:
+                            simpleskipgrams[n][skipgram][body][0] += 1
+                            simpleskipgrams[n][skipgram][body][1].add(i)
+                        else:
+                            simpleskipgrams[n][skipgram][body] += 1
                     else:
-                        simpleskipgrams[n][skipgram][body] = 1
+                        if DOINDEX:
+                            simpleskipgrams[n][skipgram][body] = [1,set(i)]
+                        else:
+                            simpleskipgrams[n][skipgram][body] = 1
                     
                     #simpleskipgrams[n].count( skipgram )                     
                     #try:
@@ -203,7 +210,11 @@ def pruneskipgrams(n, simpleskipgrams, skips):
             else:
                 cacheditems = data.items()
                 modified = False
-                for skip,count in list(data.items()):
+                for skip,data2 in list(data.items()):
+                    if DOINDEX:
+                        count = data2[0]
+                    else:
+                        count = data2
                     if count < MINSKIPTOKENS:
                         modified = True
                         #prune this skip-content only
@@ -232,9 +243,9 @@ def expandskipgrams(n, simpleskipgrams, skips):
 
         processed = {}
         skipdata = data.items()
-        for skip, skipcount in skipdata:            
+        for skip, skipcontent in skipdata:            
             if skip:
-                for skip2, skipcount2 in skipdata:                        
+                for skip2, skipcontent2 in skipdata:                        
                     if skip != skip2 and skip2 and not (skip2,skip) in processed:
                         processed[(skip,skip2)] = True
                         left = []
@@ -392,9 +403,13 @@ if DOSKIPGRAMS:
                 skipoutput = ''
             else:
                 skipoutput = '-'
-            for skip, skipcount in data.items():
+            for skip, skipcontent in data.items():
                 if skip:
                     skips += 1
+                    if DOINDEX:
+                        skipcount = skipcontent[0]
+                    else:
+                        skipcount = skipcontent                    
                     totalskipcount += skipcount                                              
                     entropy += skipcount * -math.log(skipcount)                                                          
                     if DOSKIPOUTPUT:
@@ -414,7 +429,25 @@ if DOINDEX:
     f.write('#N-GRAM\tLINES\n')
     for n in freqlist:
         for ngram, count in freqlist[n]:
-            f.write( " ".join( (str(i) for i in index[ngram] ) ) + '\n')
+            if DOCLASSER:
+                ngram_s = " ".join(classer.decodeseq(ngram))        
+            else:
+                ngram_s = " ".join(ngram)                
+            f.write( ngram_s + "\t" + " ".join( (str(i) for i in index[ngram] ) ) + '\n')
     f.close()
     
+    if DOSKIPGRAMS:
+            log("Writing skip-gram index to file", stream=sys.stderr)
+            f = codecs.open(outputprefix + '.skipgrams.index', 'w','utf-8')        
+            f.write('#SKIP-GRAM\tLINES\n')
+            for n in simpleskipgrams:
+                                
+                for skipgram, data in simpleskipgrams[n].items():
+                    if DOCLASSER:
+                        skipgram_s = " ".join(classer.decodeseq(skipgram[0])) + " * " + " ".join(classer.decodeseq(skipgram[-1]))
+                    else:
+                        skipgram_s = " ".join(skipgram[0]) + " * " + " ".join(skipgram[-1])  
+                    skipindex = [ skipcontent[0] for skip, skipcontent in data.items() ]
+                    f.write( skipgram_s + "\t" + " ".join( (str(i) for i in skipindex) ) + '\n')        
+            f.close()
 
