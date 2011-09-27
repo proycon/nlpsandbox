@@ -153,7 +153,7 @@ def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0
                     try:
                         index[ngram].add(i)
                     except KeyError:
-                        index[ngram] = set(i)
+                        index[ngram] = set((i,))
                 if DOSKIPGRAMS and n >= 3 and ngram[0] != '<begin>' and ngram[-1] != '<end>':
                     skipgram =  ( (ngram[0],) , (ngram[-1],) )
                     body = tuple(ngram[1:-1])
@@ -316,6 +316,8 @@ def buildcompgraph(freqlist):
 
 if DOCLASSER:
     classer = buildclasser()
+else:
+    classer = None
 
 f = codecs.open(corpusfile,'r',ENCODING)
 freqlist = {}
