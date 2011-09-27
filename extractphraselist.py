@@ -127,8 +127,8 @@ def buildclasser():
     log("\t" + str(len(classer)) + " classes found", stream=sys.stderr)
     return classer    
 
-def countngrams(classer, n, freqlist, simpleskipgrams, skips, linecount=0):
-    global DOTOKENIZE, DOCLASSER, DOSKIPGRAMS
+def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0):
+    global DOTOKENIZE, DOCLASSER, DOSKIPGRAMS, DOINDEX
     log("Counting "+str(n)+"-grams ...", stream=sys.stderr)
     f.seek(0)
     for i, line in enumerate(f):
@@ -149,6 +149,11 @@ def countngrams(classer, n, freqlist, simpleskipgrams, skips, linecount=0):
                 count = True
             if count:
                 freqlist[n].count(ngram)
+                if DOINDEX:
+                    try:
+                        index[ngram].add(i)
+                    except KeyError:
+                        index[ngram] = set(i)
                 if DOSKIPGRAMS and n >= 3 and ngram[0] != '<begin>' and ngram[-1] != '<end>':
                     skipgram =  ( (ngram[0],) , (ngram[-1],) )
                     body = tuple(ngram[1:-1])
@@ -174,7 +179,9 @@ def prunengrams(n, freqlist, simpleskipgrams):
     log("Pruning " + str(n) + "-grams...", stream=sys.stderr)
     for ngram, count in freqlist[n]:
         if count < MINTOKENS:
-            del freqlist[n][ngram]        
+            del freqlist[n][ngram]  
+            if DOINDEX: 
+                del index[ngram]
             if DOSKIPGRAMS:
                 skipgram = ( (ngram[0],) , (ngram[-1],) )
                 if skipgram in simpleskipgrams[n] and simpleskipgrams[n][skipgram][None] <= count:
@@ -312,7 +319,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
     skips = {}
     
     #Count n-grams
-    linecount = countngrams(classer, n, freqlist, simpleskipgrams, skips)
+    linecount = countngrams(classer, n, freqlist, simpleskipgrams, skips, index)
                             
     if MINTOKENS > 1:
         #prune n-grams
@@ -392,13 +399,22 @@ if DOSKIPGRAMS:
                     entropy += skipcount * -math.log(skipcount)                                                          
                     if DOSKIPOUTPUT:
                         if DOCLASSER:
-                            skipoutput += '_'.join(classer.decodeseq(skip)) + ' '
+                            skipoutput += '|'.join(classer.decodeseq(skip)) + ' '
                         else:
-                            skipoutput += '_'.join(skip) + ' '
+                            skipoutput += '|'.join(skip) + ' '
                         skipoutput = skipoutput.rstrip()
             f.write(str(n) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(count / float(totalskipgramcount)) + '\t' + str(skips) + '\t' + str(totalskipcount) + '\t' + str(entropy) + '\t' + skipoutput + '\n')
             
 
     f.close()
-
+    
+if DOINDEX:
+    log("Writing n-gram index to file", stream=sys.stderr)
+    f = codecs.open(outputprefix + '.phraselist.index', 'w','utf-8')        
+    f.write('#N-GRAM\tLINES\n')
+    for n in freqlist:
+        for ngram, count in freqlist[n]:
+            f.write( " ".join( (str(i) for i in index[ngram] ) ) + '\n')
+    f.close()
+    
 
