@@ -1,11 +1,11 @@
 #!/usr/bin/python
-# PBMBMT: PHRASE-BASED MEMORY-BASED MACHINE TRANSLATOR
+# Phraselist extraction
 # by Maarten van Gompel (proycon)
 #   proycon AT anaproy DOT NL
 #   http://proylt.anaproy.nl
 # Licensed under the GNU Public License v3
 # ---------------------------
-# Extracts common phrases (n-grams and simple skipgrams) from one or more corpora
+# Extracts common phrases (n-grams and skipgrams) from one or more corpora
 
 import sys
 import codecs
