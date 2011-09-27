@@ -438,20 +438,20 @@ if DOSKIPGRAMS:
 if DOINDEX:
     log("Writing n-gram index to file", stream=sys.stderr)
     f = codecs.open(outputprefix + '.phraselist.index', 'w','utf-8')        
-    f.write('#N-GRAM\tLINES\n')
+    f.write('#N\tN-GRAM\tCOUNT\tLINES\n')
     for n in freqlist:
         for ngram, count in freqlist[n]:
             if DOCLASSER:
                 ngram_s = " ".join(classer.decodeseq(ngram))        
             else:
                 ngram_s = " ".join(ngram)                
-            f.write( ngram_s + "\t" + " ".join( (str(i) for i in index[ngram] ) ) + '\n')
+            f.write( str(n) + "\t" + ngram_s + "\t" + str(count) + "\t" + " ".join( (str(i) for i in index[ngram] ) ) + '\n')
     f.close()
     
     if DOSKIPGRAMS:
             log("Writing skip-gram index to file", stream=sys.stderr)
             f = codecs.open(outputprefix + '.skipgrams.index', 'w','utf-8')        
-            f.write('#SKIP-GRAM\tLINES\n')
+            f.write('#N\tSKIP-GRAM\tCOUNT\tLINES\n')
             for n in simpleskipgrams:
                                 
                 for skipgram, data in simpleskipgrams[n].items():
@@ -462,7 +462,7 @@ if DOINDEX:
                     skipindex = set()
                     for skip, skipindex_skip in data.items():
                         if skip:
-                            skipindex.update(skipindex_skip)             
-                    f.write( skipgram_s + "\t" + " ".join( (str(i) for i in skipindex) ) + '\n')        
+                            skipindex.update(skipindex_skip)     
+                    f.write( str(n) + "\t" + skipgram_s + "\t" + str(len(skipindex)) + "\t" + " ".join( (str(i) for i in skipindex) ) + '\n')        
             f.close()
 
