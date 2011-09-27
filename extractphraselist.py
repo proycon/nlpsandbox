@@ -163,13 +163,12 @@ def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0
                         simpleskipgrams[n][skipgram][None] += 1
                     if body in simpleskipgrams[n][skipgram]:
                         if DOINDEX:
-                            simpleskipgrams[n][skipgram][body][0] += 1
-                            simpleskipgrams[n][skipgram][body][1].add(i)
+                            simpleskipgrams[n][skipgram][body].add(i)
                         else:
                             simpleskipgrams[n][skipgram][body] += 1
                     else:
                         if DOINDEX:
-                            simpleskipgrams[n][skipgram][body] = [1,set(i)]
+                            simpleskipgrams[n][skipgram][body] = set((i,))
                         else:
                             simpleskipgrams[n][skipgram][body] = 1
                     
@@ -211,15 +210,16 @@ def pruneskipgrams(n, simpleskipgrams, skips):
                 cacheditems = data.items()
                 modified = False
                 for skip,data2 in list(data.items()):
-                    if DOINDEX:
-                        count = data2[0]
-                    else:
-                        count = data2
-                    if count < MINSKIPTOKENS:
-                        modified = True
-                        #prune this skip-content only
-                        simpleskipgrams[n][skipgram][None] -= count
-                        del simpleskipgrams[n][skipgram][skip] 
+                    if skip:
+                        if DOINDEX:
+                            count = len(data2)
+                        else:
+                            count = data2
+                        if count < MINSKIPTOKENS:
+                            modified = True
+                            #prune this skip-content only
+                            simpleskipgrams[n][skipgram][None] -= count
+                            del simpleskipgrams[n][skipgram][skip] 
                 del cacheditems
                 
                 if modified:
@@ -243,9 +243,9 @@ def expandskipgrams(n, simpleskipgrams, skips):
 
         processed = {}
         skipdata = data.items()
-        for skip, skipcontent in skipdata:            
+        for skip, skipindex in skipdata:            
             if skip:
-                for skip2, skipcontent2 in skipdata:                        
+                for skip2, skipindex2 in skipdata:                        
                     if skip != skip2 and skip2 and not (skip2,skip) in processed:
                         processed[(skip,skip2)] = True
                         left = []
@@ -281,16 +281,26 @@ def expandskipgrams(n, simpleskipgrams, skips):
                         newskip = skip2[gapbegin:gapbegin+gapsize]
                 
                         newskipgram = ( skipgram[0] + tuple(left), tuple(right) + skipgram[-1] )
+                        
+                        if DOINDEX:
+                            newskipindex = skipindex | skipindex2 #a union set
+                        else:
+                            newskipindex = skipindex + skipindex2 #a count (int)
+                            
+                        
                         try:
-                            simpleskipgrams[n][newskipgram][None] += 1
+                            simpleskipgrams[n][newskipgram][None] += newskipindex
                         except:
-                            simpleskipgrams[n][newskipgram] = {None: 1}
+                            simpleskipgrams[n][newskipgram] = {None: newskipindex}
                             expansionsize += 1
-                        try:
-                            simpleskipgrams[n][newskipgram][newskip] += 1
+                        try:                            
+                            if DOINDEX:
+                                simpleskipgrams[n][newskipgram][newskip].update(newskipindex)
+                            else:
+                                simpleskipgrams[n][newskipgram][newskip] += newskipindex
                         except:
-                            simpleskipgrams[n][newskipgram][newskip] = 1
-
+                            simpleskipgrams[n][newskipgram][newskip] = newskipindex
+                                
         if len(data) ** 2 >= 1000000:
             log( '\t\t\t(next)',stream=sys.stderr)               
 
@@ -409,7 +419,7 @@ if DOSKIPGRAMS:
                 if skip:
                     skips += 1
                     if DOINDEX:
-                        skipcount = skipcontent[0]
+                        skipcount = len(skipcontent)
                     else:
                         skipcount = skipcontent                    
                     totalskipcount += skipcount                                              
@@ -449,7 +459,10 @@ if DOINDEX:
                         skipgram_s = " ".join(classer.decodeseq(skipgram[0])) + " * " + " ".join(classer.decodeseq(skipgram[-1]))
                     else:
                         skipgram_s = " ".join(skipgram[0]) + " * " + " ".join(skipgram[-1])  
-                    skipindex = [ skipcontent[0] for skip, skipcontent in data.items() ]
+                    skipindex = set()
+                    for skip, skipindex_skip in data.items():
+                        if skip:
+                            skipindex.update(skipindex_skip)             
                     f.write( skipgram_s + "\t" + " ".join( (str(i) for i in skipindex) ) + '\n')        
             f.close()
 
