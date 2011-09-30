@@ -25,6 +25,7 @@ sourceclasser = buildclasser(sourcecorpus)
 print >>sys.stderr, "Building classer for target corpus"
 targetclasser = buildclasser(targetcorpus)
 
+CONVERGEDVALUE = 0.00001
 
 sentencepairs = []
 source = open(sourcecorpus,'r')
@@ -52,8 +53,6 @@ for ws in sourcesentence:
 
 transprob = {}
 stotal = {}
-total = {}
-count = {}
 converged = False
 i = 0
 
@@ -69,11 +68,16 @@ for j, (sourcesentence, targetsentence) in enumerate(sentencepairs):
 while not converged:
     i += 1 
     print >>sys.stderr, "Round " + str(i)
+
+    total = {}
+    count = {}
     
+    converged = True
     for j, (sourcesentence, targetsentence) in enumerate(sentencepairs):
         if j % 10000 == 0: 
             print >>sys.stderr, "\t@" + str(j+1)
         #compute sentencetotal for normalisation 
+        stotal = {}
         for wt in targetsentence:    
             stotal[wt] = sum( ( transprob[(wt,ws)] for ws in sourcesentence if (wt,ws) in transprob ) )        
             
@@ -93,7 +97,7 @@ while not converged:
                 except KeyError:
                     total[ws] = value
             
-        converged = True
+        
         #estimate probabilities
         for wt in targetsentence:
             for ws in sourcesentence:
@@ -106,7 +110,7 @@ while not converged:
                     transprob[(wt,ws)] = value
                 except KeyError:
                     value = 0                
-                if value != prevvalue:
+                if abs(value - prevvalue) <= CONVERGEDVALUE:
                     converged = False
 
             
