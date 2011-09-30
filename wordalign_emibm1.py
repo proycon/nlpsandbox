@@ -25,7 +25,8 @@ sourceclasser = buildclasser(sourcecorpus)
 print >>sys.stderr, "Building classer for target corpus"
 targetclasser = buildclasser(targetcorpus)
 
-CONVERGEDVALUE = 0.00001
+CONVERGEDVALUE = 0.0001
+MAXROUNDS = 250
 
 sentencepairs = []
 source = open(sourcecorpus,'r')
@@ -65,6 +66,7 @@ for j, (sourcesentence, targetsentence) in enumerate(sentencepairs):
             transprob[(wt,ws)] = v
     
     
+prevavdivergence = 99999    
 while not converged:
     i += 1 
     print >>sys.stderr, "Round " + str(i)
@@ -115,9 +117,13 @@ while not converged:
                 divergence = abs(value - prevvalue)
                 totaldivergence += divergence
                 c += 1
-                if divergence <= CONVERGEDVALUE:
-                    converged = False
-    print "\tTotal average divergence: " + str(totaldivergence / float(c))
-        
+    
+    avdivergence = totaldivergence / float(c)
+    print "\tTotal average divergence: " + str(avdivergence)
+    if i >= MAXROUNDS or abs(avdivergence - prevavdivergence) <= CONVERGEDVALUE:
+        converged = True
+    else:
+        converged = False
+    prevavdivergence = avdivergence
     
 
