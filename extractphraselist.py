@@ -331,7 +331,7 @@ else:
 
 f = codecs.open(corpusfile,'r',ENCODING)
 freqlist = {}
-if DOINDEX: index = {}
+index = {}
 simpleskipgrams = {}
 linecount = 0
 for n in xrange(MINLENGTH,MAXLENGTH+1):
