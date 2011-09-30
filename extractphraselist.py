@@ -423,13 +423,16 @@ if DOSKIPGRAMS:
                     else:
                         skipcount = skipcontent                    
                     totalskipcount += skipcount                                              
-                    entropy += skipcount * -math.log(skipcount)                                                          
                     if DOSKIPOUTPUT:
                         if DOCLASSER:
                             skipoutput += '|'.join(classer.decodeseq(skip)) + ' '
                         else:
                             skipoutput += '|'.join(skip) + ' '
                         skipoutput = skipoutput.rstrip()
+            for skip, skipcontent in data.items():
+                if skip:
+                    entropy += skipcount * -math.log(skipcount/float(totalskipcount))   
+                        
             f.write(str(n) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(count / float(totalskipgramcount)) + '\t' + str(skips) + '\t' + str(totalskipcount) + '\t' + str(entropy) + '\t' + skipoutput + '\n')
             
 
