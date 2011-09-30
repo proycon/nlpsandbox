@@ -431,7 +431,7 @@ if DOSKIPGRAMS:
                         skipoutput = skipoutput.rstrip()
             for skip, skipcontent in data.items():
                 if skip:
-                    entropy += skipcount * -math.log(skipcount/float(totalskipcount))   
+                    entropy += skipcount * -math.log(skipcount/float(totalskipcount),2)   
                         
             f.write(str(n) + '\t' + skipgram_s + '\t' + str(count) + '\t' + str(count / float(totalskipgramcount)) + '\t' + str(skips) + '\t' + str(totalskipcount) + '\t' + str(entropy) + '\t' + skipoutput + '\n')
             
