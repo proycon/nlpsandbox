@@ -53,9 +53,15 @@ stotal = {}
 total = {}
 count = {}
 converged = False
+i = 0
 
 while not converged:
-    for sourcesentence, targetsentence in sentencepairs:
+    i += 1 
+    print >>sys.stderr, "Round " + str(i)
+    
+    for j, (sourcesentence, targetsentence) in enumerate(sentencepairs):
+        if j % 10000 == 0: 
+            print >>sys.stderr, "\t@" + str(j+1)
         #compute sentencetotal for normalisation 
         for wt in targetsentence:    
             stotal[wt] = sum( ( transprob[(wt,ws)] for ws in sourcesentence if (wt,ws) in transprob ) )        
