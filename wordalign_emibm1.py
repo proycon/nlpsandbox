@@ -15,7 +15,8 @@ def buildclasser(file):
     freqlist = FrequencyList()
     f = open(file,'r')
     for line in f:
-        freqlist.append(line.strip().split(' '))
+        line = line.strip()
+        freqlist.append(line.split(' '))
     f.close()
     return Classer(freqlist)
 
@@ -25,15 +26,16 @@ print >>sys.stderr, "Building classer for target corpus"
 targetclasser = buildclasser(targetcorpus)
 
 
+sentencepairs = []
 source = open(sourcecorpus,'r')
 target = open(targetcorpus,'r')
 while True:
-    sourcesentence = source.read()
-    targetsentence = target.read()
+    sourcesentence = source.readline()
+    targetsentence = target.readline()
     if not sourcesentence or not targetsentence:
         break
-    sourcesentence = soureclasser.encode(sourcesentence.strip().split(' '))
-    targetsentence = targetclasser.encode(targetsentence.strip().split(' '))
+    sourcesentence = sourceclasser.encodeseq(sourcesentence.strip().split(' '))
+    targetsentence = targetclasser.encodeseq(targetsentence.strip().split(' '))
     sentencepairs.append( (sourcesentence, targetsentence) )
 source.close()
 target.close()
@@ -72,7 +74,7 @@ while not converged:
                 try:
                     value =  transprob[(wt,ws)] / float(stotal[wt])
                 except KeyError:
-                    pass #no problem
+                    continue #no problem
                 try:
                     count[(wt,ws)] += value 
                 except KeyError:
@@ -90,9 +92,12 @@ while not converged:
                     prevvalue = transprob[(wt,ws)]
                 except KeyError:
                     prevvalue = 0
-                value = count[(wt,ws)] / float(total[ws])
-                transprob[(wt,ws)] = value
-                if value != prevalue:
+                try:
+                    value = count[(wt,ws)] / float(total[ws])
+                    transprob[(wt,ws)] = value
+                except KeyError:
+                    value = 0                
+                if value != prevvalue:
                     converged = False
 
             
