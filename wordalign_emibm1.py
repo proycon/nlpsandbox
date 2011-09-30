@@ -57,6 +57,15 @@ count = {}
 converged = False
 i = 0
 
+
+#Initialise uniformly
+for j, (sourcesentence, targetsentence) in enumerate(sentencepairs):
+    for ws in sourcesentence:
+        v = 1 /float(len(targetsentence))
+        for wt in targetsentence:
+            transprob[(wt,ws)] = v
+    
+    
 while not converged:
     i += 1 
     print >>sys.stderr, "Round " + str(i)
