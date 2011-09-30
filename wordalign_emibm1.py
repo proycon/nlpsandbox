@@ -73,6 +73,8 @@ while not converged:
     count = {}
     
     converged = True
+    totaldivergence = 0
+    c = 0 
     for j, (sourcesentence, targetsentence) in enumerate(sentencepairs):
         if j % 10000 == 0: 
             print >>sys.stderr, "\t@" + str(j+1)
@@ -109,10 +111,13 @@ while not converged:
                     value = count[(wt,ws)] / float(total[ws])
                     transprob[(wt,ws)] = value
                 except KeyError:
-                    value = 0                
-                if abs(value - prevvalue) <= CONVERGEDVALUE:
+                    value = 0              
+                divergence = abs(value - prevvalue)
+                totaldivergence += divergence
+                c += 1
+                if divergence <= CONVERGEDVALUE:
                     converged = False
-
-            
+    print "\tTotal average divergence: " + str(totaldivergence / float(c))
+        
     
 
