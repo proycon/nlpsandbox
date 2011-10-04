@@ -4,13 +4,16 @@
 source=$1
 target=$2
 
-sourcefilename=$(basename $source)
-sourceext=${sourcefilename##*.}
-sourcelang=${sourcefilename%.*}
+#sourcefilename=$(basename $source)
+#sourceext=${sourcefilename##*.}
+#sourcelang=${sourcefilename%.*}
+sourcelang=$source
+targetlang=$target
 
-targetfilename=$(basename $target)
-targetext=${targetfilename##*.}
-targetlang=${targetfilename%.*}
+#targetfilename=$(basename $target)
+#targetext=${targetfilename##*.}
+#targetlang=${targetfilename%.*}
+
 
 #Use plain2snt.out to convert your corpus into GIZA++ format:
 plain2snt.out $source $target
