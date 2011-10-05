@@ -129,7 +129,7 @@ def buildclasser():
     return classer    
 
 def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0):
-    global DOTOKENIZE, DOCLASSER, DOSKIPGRAMS, DOINDEX
+    global DOTOKENIZE, DOCLASSER, DOSKIPGRAMS, DOINDEX, MINLENGTH
     log("Counting "+str(n)+"-grams ...", stream=sys.stderr)
     f.seek(0)
     gaps = list(consecutivegaps(n))
@@ -158,7 +158,14 @@ def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0
                         index[ngram] = set((i,))
                 if DOSKIPGRAMS and n >= 2 and ngram[0] != '<begin>' and ngram[-1] != '<end>':                    
                     for beginindex, length in gaps:
-                        skipgram = (ngram[:beginindex], ngram[beginindex+length:])                        
+                        preskip = ngram[:beginindex]
+                        postskip = ngram[beginindex+length:]                                                
+                        if len(preskip) >= MINLENGTH and not (preskip in freqlist[len(preskip)]):
+                            continue #this skip-gram isn't going to make it over the min threshold
+                        if len(postskip) >= MINLENGTH and not (postskip in freqlist[len(preskip)]):
+                            continue  #this skip-gram isn't going to make it over the min threshold
+                    
+                        skipgram = (preskip, postskip)                        
                         body = ngram[beginindex:beginindex+length]
                         if not skipgram in simpleskipgrams[n]: #using None key for overall count to save computation time later
                             simpleskipgrams[n][skipgram] = {None: 1}
