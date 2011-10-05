@@ -11,6 +11,7 @@ import sys
 import codecs
 from pynlpl.statistics import FrequencyList
 from pynlpl.textprocessors import Windower, crude_tokenizer, Classer
+from pynlpl.algorithms import consecutivegaps
 from pynlpl.common import log
 from networkx import DiGraph, write_gpickle
 
@@ -131,7 +132,7 @@ def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0
     global DOTOKENIZE, DOCLASSER, DOSKIPGRAMS, DOINDEX
     log("Counting "+str(n)+"-grams ...", stream=sys.stderr)
     f.seek(0)
-    gaps = consecutivegaps(n)    
+    gaps = list(consecutivegaps(n))
     for i, line in enumerate(f):
         if (i % 10000 == 0): 
             if linecount == 0:
@@ -174,7 +175,7 @@ def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0
                             else:
                                 simpleskipgrams[n][skipgram][body] = 1
                     
-    log("Found " + str(len(freqlist[n])) +  " " + str(n) + "-grams and " + len(simpleskipgrams[n]) + " skip-grams", stream=sys.stderr)                    
+    log("Found " + str(len(freqlist[n])) +  " " + str(n) + "-grams and " + str(len(simpleskipgrams[n])) + " skip-grams", stream=sys.stderr)                    
     return i+1
     
 def prunengrams(n, freqlist, simpleskipgrams):
@@ -337,7 +338,7 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
 
     simpleskipgrams[n] = {}
     skips = {}
-    
+        
     #Count n-grams
     linecount = countngrams(classer, n, freqlist, simpleskipgrams, skips, index)
                             
@@ -345,18 +346,16 @@ for n in xrange(MINLENGTH,MAXLENGTH+1):
         #prune n-grams
         prunengrams(n, freqlist, simpleskipgrams)
     
-    
-
-    if DOSKIPGRAMS:
+    if DOSKIPGRAMS and n > 2:
         pruneskipgrams(n, simpleskipgrams, skips)
         
-        if DOSKIPGRAMEXPANSION:
-            #Expand skip-grams
-            expansionsize = 0
-            if n > 3:
-                expandskipgrams(n, simpleskipgrams, skips)
-                
-                pruneskipgrams(n, simpleskipgrams, skips)
+        #if DOSKIPGRAMEXPANSION:
+        #    #Expand skip-grams
+        #    expansionsize = 0
+        #    if n > 3:
+        #        expandskipgrams(n, simpleskipgrams, skips)
+        #        
+        #        pruneskipgrams(n, simpleskipgrams, skips)
         
             
     
