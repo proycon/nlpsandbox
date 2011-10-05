@@ -8,7 +8,6 @@
 # Extracts common phrases (n-grams and skipgrams) from one or more corpora
 
 import sys
-import codecs
 from pynlpl.statistics import FrequencyList
 from pynlpl.textprocessors import Windower, crude_tokenizer, Classer
 from pynlpl.algorithms import consecutivegaps
@@ -41,7 +40,7 @@ def usage():
     print >> sys.stderr, "-S                               - Output all possible skips in .skipgram file (no significant cpu/memory cost)"    
     print >> sys.stderr, "-o <output prefix>               - path + filename, .phraselist extension will be added automatically. If not set, will be derived from input file."    
     print >> sys.stderr, "-p                               - Input is not tokenised, apply crude built-in tokeniser."
-    print >> sys.stderr, "-e <encoding>                    - Encoding of input file (default: utf-8, note that output is always utf-8 regardless)"    
+    #print >> sys.stderr, "-e <encoding>                    - Encoding of input file (default: utf-8, note that output is always utf-8 regardless)"    
     
     
 
@@ -115,7 +114,7 @@ def buildclasser():
     global DOTOKENIZE, ENCODING, outputprefix
     log("Counting unigrams (for classer) ...",stream=sys.stderr)
     freqlist = FrequencyList()
-    f = codecs.open(corpusfile,'r',ENCODING)
+    f = open(corpusfile)
     for i, line in enumerate(f):            
         if (i % 10000 == 0): 
             log("\tLine " + str(i+1) + " - (classer construction)", stream=sys.stderr)
@@ -337,7 +336,7 @@ if DOCLASSER:
 else:
     classer = None
 
-f = codecs.open(corpusfile,'r',ENCODING)
+f = open(corpusfile,'r')
 freqlist = {}
 index = {}
 simpleskipgrams = {}
@@ -381,7 +380,7 @@ for n in freqlist:
             
 log("Writing n-grams to file", stream=sys.stderr)
 
-f = codecs.open(outputprefix + '.phraselist', 'w','utf-8')
+f = open(outputprefix + '.phraselist', 'w')
 f.write('#N\tN-GRAM\tOCCURRENCE-COUNT\tNORMALISED-IN-NGRAM-CLASS\tNORMALISED-OVER-ALL\tSUBCOUNT\tSUPERCOUNT\n')
 for n in freqlist:
     for ngram, count in freqlist[n]:
@@ -405,7 +404,7 @@ if DOSKIPGRAMS:
     for n in simpleskipgrams:
         totalskipgramcount += sum( ( f[None] for f in simpleskipgrams[n].values()  ) )
     
-    f = codecs.open(outputprefix + '.skipgrams', 'w','utf-8')    
+    f = open(outputprefix + '.skipgrams', 'w')    
     f.write('#N\tSKIP-N-GRAM\tOCCURRENCE-COUNT\tNORMALISED-OVER-ALL\tSKIPCONTENT-TYPES\tSKIPCONTENT-TOKENS\tSKIPCONTENT-ENTROPY\tSKIPS\n')
     for n in simpleskipgrams:
         for skipgram, data in simpleskipgrams[n].items():
@@ -446,7 +445,7 @@ if DOSKIPGRAMS:
     
 if DOINDEX:
     log("Writing n-gram index to file", stream=sys.stderr)
-    f = codecs.open(outputprefix + '.phraselist.index', 'w','utf-8')        
+    f = open(outputprefix + '.phraselist.index', 'w')        
     f.write('#N\tN-GRAM\tCOUNT\tLINES\n')
     for n in freqlist:
         for ngram, count in freqlist[n]:
@@ -459,7 +458,7 @@ if DOINDEX:
     
     if DOSKIPGRAMS:
             log("Writing skip-gram index to file", stream=sys.stderr)
-            f = codecs.open(outputprefix + '.skipgrams.index', 'w','utf-8')        
+            f = open(outputprefix + '.skipgrams.index', 'w')        
             f.write('#N\tSKIP-GRAM\tCOUNT\tLINES\n')
             for n in simpleskipgrams:
                                 
