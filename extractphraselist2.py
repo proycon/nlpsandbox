@@ -33,7 +33,7 @@ def usage():
     print >> sys.stderr, "-l <minimal length>              - Minimal length of n-grams (default: 2)"    
     print >> sys.stderr, "-L <maximum length>              - Maximum length of n-grams (default: 6)"    
     print >> sys.stderr, "-s                               - compute simple skip-n-grams (output in separate file)"    
-    print >> sys.stderr, "-E                               - Enable skip-gram expansion, computes more complex skip-grams (cpu/mem intensive)"    
+    #print >> sys.stderr, "-E                               - Enable skip-gram expansion, computes more complex skip-grams (cpu/mem intensive)"    
     print >> sys.stderr, "-C                               - use classer (saves memory and speeds up computation, but only when dealing with large data sets, outputs an extra .cls file)"
     print >> sys.stderr, "-c                               - compute compositional data (memory intensive!)" 
     print >> sys.stderr, "-I                               - maintain and output index file (separate file, memory intensive!)"    
