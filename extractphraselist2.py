@@ -13,8 +13,11 @@ from pynlpl.statistics import FrequencyList
 from pynlpl.textprocessors import Windower, crude_tokenizer, Classer
 from pynlpl.algorithms import consecutivegaps
 from pynlpl.common import log
-from networkx import DiGraph, write_gpickle
-
+try:
+    from networkx import DiGraph, write_gpickle
+except ImportError:
+    print >>sys.stderr, "WARNING: No networkx, compositionaly graph will not be supported"
+    
 import getopt
 import itertools
 import math
@@ -162,7 +165,7 @@ def countngrams(classer, n, freqlist, simpleskipgrams, skips, index, linecount=0
                         postskip = ngram[beginindex+length:]                                                
                         if len(preskip) >= MINLENGTH and not (preskip in freqlist[len(preskip)]):
                             continue #this skip-gram isn't going to make it over the min threshold
-                        if len(postskip) >= MINLENGTH and not (postskip in freqlist[len(preskip)]):
+                        if len(postskip) >= MINLENGTH and not (postskip in freqlist[len(postskip)]):
                             continue  #this skip-gram isn't going to make it over the min threshold
                     
                         skipgram = (preskip, postskip)                        
@@ -206,7 +209,7 @@ def pruneskipgrams(n, simpleskipgrams, skips):
         l = len(simpleskipgrams[n])
         log("Pruning skip-" + str(n) + "-grams... (" +str(l)+")", stream=sys.stderr)
         for i, (skipgram, data) in enumerate(simpleskipgrams[n].items()):
-            if i % 10000 == 0:  log('\t\t@' + str(i),stream=sys.stderr)
+            if i % 100000 == 0:  log('\t\t@' + str(i),stream=sys.stderr)
             typecount = len(data) - 1 #Minus the meta None/count entry
             prune = False
             if typecount < MINSKIPTYPES or data[None] < MINSKIPGRAMTOKENS:
