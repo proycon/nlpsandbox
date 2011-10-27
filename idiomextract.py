@@ -5,7 +5,7 @@ from pynlpl.formats import folia
 import sys
 
 data = []
-f = open('/home/proycon/exp/idiomen.csv','r')
+f = open(sys.argv[2],'r')
 for i, line in enumerate(f.readlines()):
     fields = line.strip().split('\t')
     if i > 1 and len(fields) > 4:
