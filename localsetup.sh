@@ -27,7 +27,8 @@ if [ $? -ne 0 ]; then
         echo "Error during installation of Mbt"
         exit 1
 fi
-svn co https://ilk.uvt.nl/svn/sources/libfolia/
+cd ..
+svn co https://ilk.uvt.nl/svn/sources/libfolia/trunk libfolia
 cd libfolia && svn update
 sh bootstrap && ./configure --prefix=$TARGET && make && make install
 if [ $? -ne 0 ]; then
