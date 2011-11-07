@@ -3,6 +3,7 @@
 
 import sys
 import types
+import traceback
 from pynlpl.statistics import Distribution
 
 
@@ -33,9 +34,11 @@ class NGram(object):
 
     def subngrams(self):
         """Yield all sub-ngrams"""
+        l = len(self)
         for begin in range(0,len(self.data)):
-            for length in range(len(self.data)-begin, len(self.data)):
-                yield NGram(self.data[begin:begin+length])
+            for length in range(1, len(self.data)-begin+1):
+                if length < l:
+                    yield NGram(self.data[begin:begin+length])
     
     def prefixes(self):
         for length in range(len(self.data), len(self.data) - 1):
@@ -48,6 +51,9 @@ class NGram(object):
     def __contains__(self, other):
         return (other in self.subngrams())
     
+    def match(self, other):
+        return self.data == other.data
+    
     def __eq__(self, other):
         return self.data == other.data
         
@@ -55,6 +61,7 @@ class NGram(object):
         return " ".join([ str(x) for x in self.data ])
         
     def split(self, index):
+        assert index > 0 and index < len(self)
         return ( NGram(self.data[:index]), NGram(self.data[index:]) )        
         
     def splitpairs(self, leftmargin = 1, rightmargin = 1):
@@ -122,6 +129,7 @@ class SkipGram(NGram):
             yield NGram(self.data[begin:begin+length])
             
     def matchmask(self, other):
+        """Matches against other skipgrams if they have the same mask, regardless of gap size"""
         if len(other.data) != len(self.data):
             return False
         for w1, w2 in zip(self.data, other.data):
@@ -131,14 +139,28 @@ class SkipGram(NGram):
             elif w1 != w2:
                 return False
         return True
-
+        
+    #def flexmatch(self, other):
+    #    """Flexible match: gap size are maximum length, accepts shorter solutions"""
+    #    
+    #    cursor1 = 0
+    #    cursor2 = 0
+    #    
+    #    while cursor1 < len(self.data) and cursor2 < len(self.data):
+    #        if isinstance(cursor1,Gap):
+    #            
+    #        
+    #    return True
             
             
     def match(self, other):
         if len(other) != len(self):
-            return False
+            return False        
         
-        for w1, w2 in zip(self.simpleform(), other.simpleform()):
+        if isinstance(other, SkipGram):
+            other = other.simpleform()
+            
+        for w1, w2 in zip(self.simpleform(), other):
             if w1 is None:
                 #good, match                
                 pass
@@ -310,17 +332,21 @@ class PatternGraph(object):
 
         for gram in self.freqlist.keys():
             for gram1, gram2 in gram.splitpairs():
-                if gram1 in self.freqlist and gram2 in self.freqlist:
-                    try:
-                        self.rel_follows[gram2][gram1] += self.freqlist[gram]
-                    except KeyError:
+                if gram1 in self.freqlist and gram2 in self.freqlist:                                                        
+                    if not gram2 in self.rel_follows:
                         self.rel_follows[gram2] = {gram1: self.freqlist[gram] }
+                    elif not gram1 in self.rel_follows[gram2]:
+                        self.rel_follows[gram2][gram1] = self.freqlist[gram]
+                    else:
+                        self.rel_follows[gram2][gram1] += self.freqlist[gram]
 
-                    try:
-                        self.rel_preceeds[gram1][gram2] +=  self.freqlist[gram]
-                    except KeyError:
-                        self.rel_preceeds[gram1] = {gram2:  self.freqlist[gram] }
-            
+
+                    if not gram1 in self.rel_preceeds:
+                        self.rel_preceeds[gram1] = {gram2: self.freqlist[gram] }
+                    elif not gram1 in self.rel_preceeds[gram1]:
+                        self.rel_preceeds[gram1][gram2] = self.freqlist[gram]
+                    else:
+                        self.rel_preceeds[gram1][gram2] += self.freqlist[gram]            
             
         print >>sys.stderr, "\tgrams with a right neighbour: " + str(len(self.rel_preceeds))                        
         print >>sys.stderr, "\tgrams with a left neighbour: " + str(len(self.rel_follows))                            
@@ -329,7 +355,7 @@ class PatternGraph(object):
 
 
         processed = {}
-        for skipgram in  self.freqlist.keys():
+        for skipgram in []: # self.freqlist.keys():
             if isinstance(skipgram, SkipGram):
                 for skipgram2 in  self.freqlist.keys():                    
                     if isinstance(skipgram2, SkipGram) and not (skipgram is skipgram2) and len(skipgram) == len(skipgram2) and not (skipgram2, skipgram) in processed:                
@@ -407,10 +433,10 @@ class PatternGraph(object):
     def freqskipgrams(self, gram):
         return self.freqlist[gram] / float(self.totalskipgrams)
 
-    def followedby(self, gram):
+    def next(self, gram):
         return Distribution(self.rel_preceeds[gram])
 
-    def precededby(self, gram):
+    def prev(self, gram):
         return Distribution(self.rel_follows[gram])
         
     def children(self, gram):
@@ -426,68 +452,82 @@ class PatternGraph(object):
         return self.rel_skipcontent[gram]
         
         
-    def find(self, text):
-        results = set()
-        subgram = NGram(text)
-        for gram in self:            
-            if gram == subgram:
-                results.add( gram )
-            for subgram2 in gram.subngrams():
-                if subgram2 == subgram:
+    def find(self, text,n=0,partial=True,ngramsonly=False):
+        results = set()           
+        dynamic = False 
+        if '*' in text.split(' '):
+            text = text.split(' ')
+            for i in range(0,len(text)):
+                if text[i] == '*':
+                    dynamic = True
+                    text[i] == '{*9*}'                    
+        subgram = self.parseskipgram(text)
+        for gram in self:      
+            if ngramsonly and not isinstance(gram, NGram):
+                continue
+            if(n == 0 or n == len(gram)):      
+                if gram == subgram or subgram.match(gram): 
                     results.add( gram )
+                
+                if partial:
+                    for subgram2 in gram.subngrams():
+                        if subgram2 == subgram or subgram.match(subgram2):
+                            results.add( gram )
         return results
         
         
-    def findngrams(self, text):
-        results = set()
-        subgram = NGram(text)
-        for gram in self:            
-            if isinstance(gram, NGram):
-                if gram == subgram:
-                    results.add( gram )
-                for subgram2 in gram.subngrams():
-                    if subgram2 == subgram:
-                        results.add( gram )
-        return results        
+    def findngrams(self, text,n=0):
+        return self.find(text,n,partial,ngramsonly)
 
-    def findskipgrams(self, text):
-        results = set()
+    def findskipgrams(self, text,n=0,partial=False):
+        results = set()                
         subgram = NGram(text)
-        for gram in self:            
-            if isinstance(gram, SkipGram):
-                if gram == subgram:
+        for gram in self:                     
+            if isinstance(gram, SkipGram)  and (n == 0 or n == len(gram)):
+                if gram.match(subgram):
                     results.add( gram )
-                for subgram2 in gram.subngrams():
-                    if subgram2 == subgram:
-                        results.add( gram )
+                if partial:
+                    for subgram2 in gram.subngrams():
+                        if subgram2.match(subgram):
+                            results.add( gram )
         return results        
 
 
 def help():
     print 'Q("Test text")                      -- Query the model for this exact ngram/skipgram'
     print 'g.find("Test text")                 -- Find all ngram/skipgrams that contain this ngram'
+    print 'g.findngrams("the",3)               -- Find all trigrams containing "the"'
     print 'g.count(Q("Test text"))             -- Obtain the absolute count of the specific ngram/skipgram'
     print 'g.freq(Q("Test text"))              -- Obtain the relative frequency of the specific ngram/skipgram (normalised over all ngrams and skipgrams)'
     print 'g.freqngrams(Q("Test text"))        -- Obtain the relative frequency of the specific ngram (normalised over all ngrams)'
     print 'g.freqskipgrams(Q("Test text"))     -- Obtain the relative frequency of the specific skipgram (normalised over all skipgrams)'
-    print 'g.followedby(Q("Test text")))       -- Obtain a distribution of constructions that follow this one' 
-    print 'g.precededby(Q("Test text")))       -- Obtain a distribution of constructions that preceed this one'     
+    print 'g.next(Q("Test text")))             -- Obtain a distribution of constructions that follow this one' 
+    print 'g.prev(Q("Test text")))             -- Obtain a distribution of constructions that preceed this one'     
     print 'g.parents(Q("Test text")))          -- Obtain all ngrams that contain the specified one'
-    print 'g.children(Q("Test text")))         -- Obtain all ngrams that are contained withing the specified one'
+    print 'g.children(Q("Test text")))         -- Obtain all ngrams that are contained within the specified one'
     print 'g.skipcontent(Q("The {*3*} text"))) -- Obtain the contents of a skipgram'
     print 'g.components(Q("The {*3*} text")))  -- Obtain the consecutive components in a skipgram'
     print 'Use variable _ for the last result'
 
 
 def show(x):
-    global g,_ 
-    if isinstance(x, list) or isinstance(x,tuple)  or isinstance(x,set) or isinstance(x, types.GeneratorType):
-        for i, y in enumerate(sorted(x)):
-            _ = y
-            if y in g.freqlist:
-                print str(i+1) + '\t' + str(y) + '\t' + str(g.freqlist[y])
-            else:
-                print str(i+1) + '\t' + str(y) 
+    global g,_     
+    if isinstance(x, types.GeneratorType):
+        x = list(x)
+    if isinstance(x, list) or isinstance(x,tuple)  or isinstance(x,set):
+        if all(( y in g.freqlist for y in x )):            
+            x = dict(   (y,g.freqlist[y]) for y in x )
+            total = sum((y[1] for y in x.items()))
+            for i, (y, z) in enumerate(sorted(x.items(), key = lambda x: -1 * x[1])):
+                _ = y
+                print str(i+1) + '\t' + str(y) + '\t' + str(z) + '\t' + str(z/float(total))
+        else:
+            for i, y in enumerate(x):
+                if y in g.freqlist:
+                    print str(i+1) + '\t' + str(y) + '\t' + str(g.freqlist[y])
+                else:
+                    print str(i+1) + '\t' + str(y) 
+
         print "--------------------"        
     elif isinstance(x, Distribution):
         for i, (key, value) in enumerate(x):
@@ -525,7 +565,7 @@ if __name__ == "__main__":
         except Exception as e:
             print "An error occurred"
             print "---------------------------------------"
-            print str(e)
+            traceback.print_exc()
             print "---------------------------------------"
     
 
