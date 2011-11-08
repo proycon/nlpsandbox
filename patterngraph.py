@@ -94,9 +94,9 @@ class Gap(object):
     
 
 class SkipGram(NGram):
-    def __init__(self, l, skipcontent=None):
+    def __init__(self, l): #, skipcontent=None):
         super(SkipGram,self).__init__(l)
-        self.skipcontent = skipcontent
+        #self.skipcontent = skipcontent
     
     def __len__(self):        
         l = 0
@@ -180,6 +180,20 @@ class SkipGram(NGram):
                 newdata.append(x)        
         return tuple(newdata)
                 
+                
+    def instances(self, skipcontentdict):
+        for skipcontent in skipcontentdict[self]:
+            data = []
+            offset = 0
+            for i, x in enumerate(self.data):
+                if isinstance(x,Gap):
+                    #get from skipcontent
+                    data += list(skipcontent[offset:len(x)])
+                    offset += len(x) + 1
+                else:
+                    data.append( x )
+            yield NGram(data)
+                
         
             
 class PatternGraph(object):        
@@ -215,9 +229,6 @@ class PatternGraph(object):
 
 
     def parseskipgram(self, skipgram_s, skipcontentdata=None):    
-        if skipcontentdata:
-            skipcontentdata = skipcontentdata.split('|')            
-            skipcontentdata = dict(zip([ self.parseskipgram(x) for x in skipcontentdata[0::2] ], skipcontentdata[1::2]))    
         
         rawdata = skipgram_s.split(' ')
         data = []
@@ -226,8 +237,16 @@ class PatternGraph(object):
                 data.append(Gap(int(x[2:-2])))
             else:
                 data.append(x)
-                    
-        return SkipGram(data, skipcontentdata)
+
+
+        skipgram = SkipGram(data)        
+
+        if skipcontentdata:
+            skipcontentdata = skipcontentdata.split('|')            
+            skipcontentdata = dict(zip([ self.parseskipgram(x) for x in skipcontentdata[0::2] ], skipcontentdata[1::2]))    
+            self.skipcontent[skipgram] = skipcontentdata
+                                
+        return skipgram
         
     def __iter__(self):
         for x in self.freqlist.keys():
@@ -236,10 +255,13 @@ class PatternGraph(object):
     def __init__(self, ngramfile, skipgramfile):
         print >>sys.stderr, "Loading n-grams"
 
+        self.skipcontent = {}
+
         self.freqlist, self.totalngramtokens, self.max_n = self.loadngrams(ngramfile)
 
         print >>sys.stderr, "\t" + str(len(self.freqlist)) + " types, " +  str(self.totalngramtokens) + " tokens"
 
+        
         self.rel_children = {} #Relations: ngram -> [subngram]             Ex: A B C -> [A,B,C,A B, B C]
         self.rel_parents = {} #Relations: ngram -> [superngram]            Ex: A -> [A B C] 
 
@@ -304,19 +326,19 @@ class PatternGraph(object):
                     #        except KeyError:
                     #            self.rel_skipgramsuper[subngram] = set( (skipgram,) )
 
-                                                
-                    for content in skipgram.skipcontent.keys():
-                        for subngram in content.parts():
-                            if subngram in self.freqlist:
-                                try:
-                                    self.rel_skipcontent[skipgram].add(subngram)
-                                except KeyError:
-                                    self.rel_skipcontent[skipgram] = set( (subngram,) )
-                            
-                                try:
-                                    self.rel_inskipcontent[subngram].add(skipgram)
-                                except KeyError:
-                                    self.rel_inskipcontent[subngram] = set( (skipgram,) )
+                    if skipgram in self.skipcontent:
+                        for content in self.skipcontent[skipgram].keys():
+                            for subngram in content.parts():
+                                if subngram in self.freqlist:
+                                    try:
+                                        self.rel_skipcontent[skipgram].add(subngram)
+                                    except KeyError:
+                                        self.rel_skipcontent[skipgram] = set( (subngram,) )
+                                
+                                    try:
+                                        self.rel_inskipcontent[subngram].add(skipgram)
+                                    except KeyError:
+                                        self.rel_inskipcontent[subngram] = set( (skipgram,) )
 
             
 
@@ -366,9 +388,9 @@ class PatternGraph(object):
             
             if isinstance(skipgram, SkipGram):
                 for skipgram2 in  self.freqlist.keys():                    
-                        if isinstance(skipgram2, SkipGram) and skipgram.matchmask(skipgram2):
-                            
-                            if len(skipgram) > len(skipgram2):
+                        if isinstance(skipgram2, SkipGram) and not (skipgram is skipgram2):
+
+                            if skipgram.matchmask(skipgram2) and len(skipgram) > len(skipgram2):
                                 try:
                                     self.rel_wider[skipgram].add(skipgram2)
                                 except KeyError:
@@ -377,21 +399,33 @@ class PatternGraph(object):
                                 try:
                                     self.rel_narrower[skipgram2].add(skipgram)
                                 except KeyError:
-                                    self.rel_narrower[skipgram2] = set( (skipgram,) )                    
+                                    self.rel_narrower[skipgram2] = set( (skipgram,) )
 
-                            
-                        elif skipgram.match(skipgram2):
-                            try:
-                                self.rel_instances[skipgram].add(skipgram2)
-                            except KeyError:
-                                self.rel_instances[skipgram] = set( (skipgram2,) )                    
-                            
-                            try:
-                                self.rel_patterns[skipgram2].add(skipgram)
-                            except KeyError:
-                                self.rel_patterns[skipgram2] = set( (skipgram,) )                      
+                            elif skipgram.match(skipgram2):
+                                try:
+                                    self.rel_instances[skipgram].add(skipgram2)
+                                except KeyError:
+                                    self.rel_instances[skipgram] = set( (skipgram2,) )                    
+                               
+                                try:
+                                    self.rel_patterns[skipgram2].add(skipgram)
+                                except KeyError:
+                                    self.rel_patterns[skipgram2] = set( (skipgram,) )                      
                                          
-                                                
+                for instance in skipgram.instances(self.skipcontent):
+                    if instance in self.freqlist:
+                        try:
+                            self.rel_instances[skipgram].add(instance)
+                        except KeyError:
+                            self.rel_instances[skipgram] = set( (instance,) )                    
+                       
+                        try:
+                            self.rel_patterns[instance].add(skipgram)
+                        except KeyError:
+                            self.rel_patterns[instance] = set( (skipgram,) )
+                    
+                
+                
 
         print >>sys.stderr, "\tskipgrams with a wider variant: " + str(len(self.rel_wider))                        
         print >>sys.stderr, "\tskipgrams with a narrower variant: " + str(len(self.rel_narrower))                        
