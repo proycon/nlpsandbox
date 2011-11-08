@@ -4,6 +4,7 @@
 import sys
 import types
 import traceback
+import os
 from pynlpl.statistics import Distribution
 
 
@@ -64,9 +65,9 @@ class NGram(object):
         assert index > 0 and index < len(self)
         return ( NGram(self.data[:index]), NGram(self.data[index:]) )        
         
-    def splitpairs(self, leftmargin = 1, rightmargin = 1):
+    def splitpairs(self):
         """Yield pairs of subngrams that follow eachother: for A B C D: A, B C D ;  A B, C D  ; A B C , D   """
-        for i in range(leftmargin,len(self) - rightmargin):
+        for i in range(1,len(self)):
             yield self.split(i)
         
         
@@ -122,6 +123,7 @@ class SkipGram(NGram):
             if isinstance(x, Gap):
                 if length > 0:
                     yield NGram(self.data[begin:begin+length])
+                begin = i + 1
                 length = 0
             else:
                 length += 1
@@ -343,7 +345,7 @@ class PatternGraph(object):
 
                     if not gram1 in self.rel_preceeds:
                         self.rel_preceeds[gram1] = {gram2: self.freqlist[gram] }
-                    elif not gram1 in self.rel_preceeds[gram1]:
+                    elif not gram2 in self.rel_preceeds[gram1]:
                         self.rel_preceeds[gram1][gram2] = self.freqlist[gram]
                     else:
                         self.rel_preceeds[gram1][gram2] += self.freqlist[gram]            
@@ -493,6 +495,132 @@ class PatternGraph(object):
         return results        
 
 
+    def nodeid(self,gram): #for graphviz
+        return "n" + str(hash(gram)).replace('-','m')
+
+    def graph(self, gram ):        
+        """Return a dotgraph (graphviz) for a specific gram"""
+        if not gram in self.freqlist:
+            raise KeyError
+        
+        
+        edges = []
+        
+        blacknodes = set()
+        
+        if gram in self.rel_children:
+            for gram2 in self.rel_children[gram]:
+                blacknodes.add(gram2)
+                edges.append(self.nodeid(gram2) + " -> " + self.nodeid(gram) + ' [ color=black ];')                
+        
+        if gram in self.rel_parents:
+            for gram2 in self.rel_parents[gram]:
+                if not gram2 in blacknodes:
+                    blacknodes.add(gram2)
+                    edges.append(self.nodeid(gram) + " -> " + self.nodeid(gram2) + ' [ color=black ];' )
+        
+        
+        greennodes = set()
+
+        if gram in self.rel_preceeds:
+            total = sum( ( x[1] for x in self.rel_preceeds[gram].items()) )
+            for gram2, freq in self.rel_preceeds[gram].items():
+                greennodes.add(gram2)
+                edges.append(self.nodeid(gram) + " -> " + self.nodeid(gram2) + ' [ color=green,label="'+str(freq/float(total))+'" ];')                
+        
+        if gram in self.rel_follows:
+            total = sum( ( x[1] for x in self.rel_follows[gram].items()) )
+            for gram2, freq in self.rel_follows[gram].items():
+                if not gram2 in greennodes:
+                    greennodes.add(gram2)
+                    edges.append(self.nodeid(gram2) + " -> " + self.nodeid(gram) + ' [ color=green,label="'+str(freq/float(total))+'" ];')                
+
+
+        purplenodes = set()
+
+        if gram in self.rel_skipgramsuper:
+            for gram2 in self.rel_skipgramsuper[gram]: 
+                purplenodes.add(gram2)
+                edges.append(self.nodeid(gram) + " -> " + self.nodeid(gram2) + ' [ color=purple ];' )
+                
+        if gram in self.rel_skipgramsub:
+            for gram2 in self.rel_skipgramsub[gram]: 
+                if not gram2 in purplenodes:
+                    purplenodes.add(gram2)
+                    edges.append(self.nodeid(gram2) + " -> " + self.nodeid(gram) + ' [ color=purple ];' )                
+                
+        bluenodes = set()
+
+        if gram in self.rel_inskipcontent:
+            for gram2 in self.rel_inskipcontent[gram]: 
+                bluenodes.add(gram2)
+                edges.append(self.nodeid(gram) + " -> " + self.nodeid(gram2) + ' [ color=blue ];' )
+                
+        if gram in self.rel_skipcontent:
+            for gram2 in self.rel_skipcontent[gram]: 
+                if not gram2 in bluenodes:
+                    bluenodes.add(gram2)
+                    edges.append(self.nodeid(gram2) + " -> " + self.nodeid(gram) + ' [ color=blue ];' )                   
+                    
+        nodes = blacknodes | greennodes | bluenodes | purplenodes
+
+        #Find 2nd order relations between all found nodes
+        for node1 in nodes:
+            for node2 in nodes:
+                if node1 in self.rel_children and node2 in self.rel_children[node1]:
+                    edges.append(self.nodeid(node2) + " -> " + self.nodeid(node1) + ' [ color=black ];' )
+                #if node1 in self.rel_parents and node2 in self.rel_parents[node1]:                    
+                #    edges.append(self.nodeid(node1) + " -> " + self.nodeid(node2) + ' [ color=black ];' )                    
+                #if node1 in self.rel_preceeds and node2 in self.rel_preceeds[node1]:
+                #    total = sum( ( x[1] for x in self.rel_preceeds[node1].items()) )
+                #    edges.append(self.nodeid(node1) + " -> " + self.nodeid(node2) + ' [ color=green,label="'+str(self.rel_preceeds[node1][node2]/float(total))+'" ];')                
+                #if node1 in self.rel_follows and node2 in self.rel_follows[node1]:
+                #    total = sum( ( x[1] for x in self.rel_follows[node1].items()) )
+                #    edges.append(self.nodeid(node2) + " -> " + self.nodeid(node1) + ' [ color=green,label="'+str(self.rel_follows[node1][node2]/float(total))+'" ];')                                    
+                if node1 in self.rel_skipgramsuper and node2 in self.rel_skipgramsuper[node1]:
+                    edges.append(self.nodeid(node1) + " -> " + self.nodeid(node2) + ' [ color=purple ];' )
+                #if node1 in self.rel_skipgramsub and node2 in self.rel_skipgramsub[node1]:
+                #    edges.append(self.nodeid(node2) + " -> " + self.nodeid(node1) + ' [ color=purple ];' )
+                if node1 in self.rel_inskipcontent and node2 in self.rel_inskipcontent[node1]:
+                    edges.append(self.nodeid(node1) + " -> " + self.nodeid(node2) + ' [ color=blue ];' )
+                #if node1 in self.rel_skipcontent and node2 in self.rel_skipcontent[node1]:
+                #    edges.append(self.nodeid(node2) + " -> " + self.nodeid(node1) + ' [ color=blue ];' )                    
+                    
+        dot = "digraph G {\n"
+        #dot += "concentrate=true;\n"        
+        if isinstance(gram, SkipGram):
+            dot += self.nodeid(gram) + " [ fontsize=24, label=\""+str(gram).replace('"','&quot;') +"\\n"+ str(self.freqlist[gram])+"\",color=yellow, shape=circle,style=filled ];\n"
+        else:
+            dot += self.nodeid(gram) + " [ fontsize=24, label=\""+str(gram).replace('"','&quot;') +"\\n"+ str(self.freqlist[gram])+"\", color=yellow, shape=box,style=filled ];\n"
+            
+        for node in nodes:
+            if isinstance(node, SkipGram):    
+                dot += self.nodeid(node) + " [ label=\""+str(node).replace('"','&quot;') +"\\n"+ str(self.freqlist[node]) + "\",shape=circle ];\n"                
+            else:
+                dot += self.nodeid(node) + " [ label=\""+str(node).replace('"','&quot;') +"\\n"+ str(self.freqlist[node]) + "\",shape=box ];\n"                
+        for edge in edges:
+            dot += edge + '\n'
+            
+        dot += "}\n"
+                            
+        return DotGraph(dot)
+        
+
+class DotGraph():
+    def __init__(self,data):
+        self.data = data  
+        
+    def make(self,filename='/tmp/patterngraph.pdf'):
+        f = open('/tmp/patterngraph.dot','w')
+        f.write(self.data)
+        f.close()
+        os.system('dot -Tpdf /tmp/patterngraph.dot -o ' + filename)
+        
+        
+        
+                
+
+
 def help():
     print 'Q("Test text")                      -- Query the model for this exact ngram/skipgram'
     print 'g.find("Test text")                 -- Find all ngram/skipgrams that contain this ngram'
@@ -507,11 +635,13 @@ def help():
     print 'g.children(Q("Test text")))         -- Obtain all ngrams that are contained within the specified one'
     print 'g.skipcontent(Q("The {*3*} text"))) -- Obtain the contents of a skipgram'
     print 'g.components(Q("The {*3*} text")))  -- Obtain the consecutive components in a skipgram'
+    print 'g.graph(Q("Test text")))       -- Obtain the consecutive components in a skipgram'
     print 'Use variable _ for the last result'
 
 
 def show(x):
-    global g,_     
+    global g,_   
+    PDFVIEWER = 'evince'  
     if isinstance(x, types.GeneratorType):
         x = list(x)
     if isinstance(x, list) or isinstance(x,tuple)  or isinstance(x,set):
@@ -541,6 +671,9 @@ def show(x):
     elif isinstance(x, NGram) or isinstance(x, SkipGram) and x in  g.freqlist:
         print str(x) + '\t' + str(g.freqlist[x]) 
         _ = x
+    elif isinstance(x, DotGraph):
+        x.make()
+        os.system(PDFVIEWER + ' /tmp/patterngraph.pdf')
     elif not (x is None):
         print str(x)
 
@@ -569,23 +702,3 @@ if __name__ == "__main__":
             print "---------------------------------------"
     
 
-
-
-#Graphviz output
-#def nodeid(gram):
-#    return "n" + str(hash(gram)).replace('-','m')
-    
-
-#print "digraph G {"
-#for gram in freqlist:
-#    if isinstance(gram, SkipGram):
-#        print nodeid(gram) + " [shape=ellipse,label=\""+str(gram).replace('"','&quot;')+"\"];"
-#    else:
-#        print nodeid(gram) + " [shape=box,label=\""+str(gram).replace('"','&quot;')+"\"];"
-#self.rel_children[ngram].add(subngram)
-
-#for ngram, parents in self.rel_parents.items():
-#    for ngram2 in parents:
-#        print nodeid(ngram) + " -> " + nodeid(ngram2) + ";"
-
-#print "}"
