@@ -243,14 +243,14 @@ class PatternGraph(object):
         self.rel_children = {} #Relations: ngram -> [subngram]             Ex: A B C -> [A,B,C,A B, B C]
         self.rel_parents = {} #Relations: ngram -> [superngram]            Ex: A -> [A B C] 
 
-        self.rel_skipgramsub = {} #Relations: skipgram -> [ngram]         Ex: A * B -> [A, B]
-        self.rel_skipgramsuper = {} #Relations: skipgram -> [ngram]         Ex: A * B -> [A, B]
+        #self.rel_skipgramsub = {} #Relations: skipgram -> [ngram]         Ex: A * B -> [A, B]
+        #self.rel_skipgramsuper = {} #Relations: skipgram -> [ngram]         Ex: A * B -> [A, B]
 
         self.rel_skipcontent = {} #Relations: skipgram -> [skipgram]       Ex: A * C -> [B]
         self.rel_inskipcontent = {} #Relations: skipgram -> [skipgram]       Ex: B -> [A * C]
 
-        self.rel_subsumes = {} #Relations: skipgram -> [skipgram]             Ex: A * * D -> [A * C D, A B * D]
-        self.rel_contained ={}  #Relations: skipgram -> [skipgram]          Ex: A B * D -> [A * * D]
+        self.rel_instances = {} #Relations: skipgram -> [anygram]             Ex: A * * D -> [A * C D, A B * D, A B C D]
+        self.rel_patterns = {}  #Relations: skipgram -> [anypgram]          Ex: A B * D -> [A * * D]
 
         self.rel_wider  ={}  #Relations: skipgram -> [skipgram]          Ex: A * D -> [A * * D, A * * * D]
         self.rel_narrower  ={}  #Relations: skipgram -> [skipgram]          Ex: A * * D -> [A * D]
@@ -260,7 +260,13 @@ class PatternGraph(object):
         self.rel_preceeds = {} #Relations: anygram -> [anygram]            Ex :  A B C -> [D E F]
 
 
-        print >>sys.stderr, "Computing parenthood on n-grams"
+        print >>sys.stderr, "Loading skipgrams"        
+        self.freqlist, self.totalskipgramtokens,self.totalskipgramtypes = self.loadskipgrams(skipgramfile, self.freqlist)
+        self.totaltokens = self.totalngramtokens + self.totalskipgramtokens        
+        print >>sys.stderr, "\t" + str(self.totalskipgramtypes) + " types, " +  str(self.totalskipgramtokens) + " tokens"
+
+
+        print >>sys.stderr, "Computing parenthood/compositionality"
 
         for n in range(2,self.max_n+1):
             for ngram in self.freqlist.keys():
@@ -277,33 +283,26 @@ class PatternGraph(object):
                             except KeyError:
                                 self.rel_parents[subngram] = set( (ngram,) )
 
-        print >>sys.stderr, "\tn-grams with children: " + str(len(self.rel_children))                        
-        print >>sys.stderr, "\tn-grams with parents: " + str(len(self.rel_parents))                        
-
-        print >>sys.stderr, "Loading skipgrams"
-                                
-        self.freqlist, self.totalskipgramtokens,self.totalskipgramtypes = self.loadskipgrams(skipgramfile, self.freqlist)
-
-        self.totaltokens = self.totalngramtokens + self.totalskipgramtokens
-
-        print >>sys.stderr, "\t" + str(self.totalskipgramtypes) + " types, " +  str(self.totalskipgramtokens) + " tokens"
+        print >>sys.stderr, "\tgrams with children: " + str(len(self.rel_children))                        
+        print >>sys.stderr, "\tgrams with parents: " + str(len(self.rel_parents))                        
+                            
 
         print >>sys.stderr, "Computing skipgram<->ngram relations"
 
         for n in range(2,self.max_n+1):
             for skipgram in self.freqlist.keys():
                 if isinstance(skipgram, SkipGram):
-                    for subngram in skipgram.parts():
-                        if subngram in self.freqlist:
-                            try:
-                                self.rel_skipgramsub[skipgram].add(subngram)
-                            except KeyError:
-                                self.rel_skipgramsub[skipgram] = set( (subngram,) )
-                                
-                            try:
-                                self.rel_skipgramsuper[subngram].add(skipgram)
-                            except KeyError:
-                                self.rel_skipgramsuper[subngram] = set( (skipgram,) )
+                    #for subngram in skipgram.parts():
+                    #    if subngram in self.freqlist:
+                    #        try:
+                    #            self.rel_skipgramsub[skipgram].add(subngram)
+                    #        except KeyError:
+                    #            self.rel_skipgramsub[skipgram] = set( (subngram,) )
+                    #            
+                    #        try:
+                    #            self.rel_skipgramsuper[subngram].add(skipgram)
+                    #        except KeyError:
+                    #            self.rel_skipgramsuper[subngram] = set( (skipgram,) )
 
                                                 
                     for content in skipgram.skipcontent.keys():
@@ -321,8 +320,8 @@ class PatternGraph(object):
 
             
 
-        print >>sys.stderr, "\tskipgrams that contain known n-grams in their component: " + str(len(self.rel_skipgramsuper))        
-        print >>sys.stderr, "\tn-grams that occur as component of a skipgram: " + str(len(self.rel_skipgramsuper))                        
+        #print >>sys.stderr, "\tskipgrams that contain known n-grams in their component: " + str(len(self.rel_skipgramsuper))        
+        #print >>sys.stderr, "\tn-grams that occur as component of a skipgram: " + str(len(self.rel_skipgramsuper))                        
         print >>sys.stderr, "\tskipgrams that contain known n-grams in their content: " + str(len(self.rel_skipcontent))        
         print >>sys.stderr, "\tn-grams that occur in the content of a skipgram: " + str(len(self.rel_inskipcontent))                        
 
@@ -357,12 +356,18 @@ class PatternGraph(object):
 
 
         processed = {}
-        for skipgram in []: # self.freqlist.keys():
+        l = len(self.freqlist.keys())        
+        prevp = -1
+        for i, skipgram in enumerate(self.freqlist.keys()):
+            p = round((i / float(l)) * 100)
+            if p % 5 == 0 and p != prevp:
+                prevp = p
+                print >>sys.stderr, '\t@' +  str(p) + '%'
+            
             if isinstance(skipgram, SkipGram):
                 for skipgram2 in  self.freqlist.keys():                    
-                    if isinstance(skipgram2, SkipGram) and not (skipgram is skipgram2) and len(skipgram) == len(skipgram2) and not (skipgram2, skipgram) in processed:                
-                        processed[(  skipgram, skipgram2 )] = True
-                        if skipgram.matchmask(skipgram2):
+                        if isinstance(skipgram2, SkipGram) and skipgram.matchmask(skipgram2):
+                            
                             if len(skipgram) > len(skipgram2):
                                 try:
                                     self.rel_wider[skipgram].add(skipgram2)
@@ -373,46 +378,25 @@ class PatternGraph(object):
                                     self.rel_narrower[skipgram2].add(skipgram)
                                 except KeyError:
                                     self.rel_narrower[skipgram2] = set( (skipgram,) )                    
-                                
-                            elif len(skipgram) < len(skipgram2):
-                                try:
-                                    self.rel_wider[skipgram2].add(skipgram)
-                                except KeyError:
-                                    self.rel_wider[skipgram2] = set( (skipgram,) )                    
-                                
-                                try:
-                                    self.rel_narrower[skipgram].add(skipgram2)
-                                except KeyError:
-                                    self.rel_narrower[skipgram] = set( (skipgram2,) )                           
-                                
+
                             
                         elif skipgram.match(skipgram2):
                             try:
-                                self.rel_subsumes[skipgram].add(skipgram2)
+                                self.rel_instances[skipgram].add(skipgram2)
                             except KeyError:
-                                self.rel_subsumes[skipgram] = set( (skipgram2,) )                    
+                                self.rel_instances[skipgram] = set( (skipgram2,) )                    
                             
                             try:
-                                self.rel_contained[skipgram2].add(skipgram)
+                                self.rel_patterns[skipgram2].add(skipgram)
                             except KeyError:
-                                self.rel_contained[skipgram2] = set( (skipgram,) )                      
-                            
-                        elif skipgram2.match(skipgram):
-                            try:
-                                self.rel_contained[skipgram].add(skipgram2)
-                            except KeyError:
-                                self.rel_contained[skipgram] = set( (skipgram2,) )                    
-                            
-                            try:
-                                self.rel_subsumes[skipgram2].add(skipgram)
-                            except KeyError:
-                                self.rel_subsumes[skipgram2] = set( (skipgram,) )                      
+                                self.rel_patterns[skipgram2] = set( (skipgram,) )                      
+                                         
                                                 
 
         print >>sys.stderr, "\tskipgrams with a wider variant: " + str(len(self.rel_wider))                        
         print >>sys.stderr, "\tskipgrams with a narrower variant: " + str(len(self.rel_narrower))                        
-        print >>sys.stderr, "\tskipgrams that subsume others: " + str(len(self.rel_subsumes))                                            
-        print >>sys.stderr, "\tskipgrams that are subsumed by others: " + str(len(self.rel_contained))                                            
+        print >>sys.stderr, "\tskipgrams that have instances: " + str(len(self.rel_instances))                                            
+        print >>sys.stderr, "\tgrams that are covered by a pattern: " + str(len(self.rel_patterns))                                            
 
         del processed 
 
@@ -535,19 +519,7 @@ class PatternGraph(object):
                     greennodes.add(gram2)
                     edges.append(self.nodeid(gram2) + " -> " + self.nodeid(gram) + ' [ color=green,label="'+str(freq/float(total))+'" ];')                
 
-
-        purplenodes = set()
-
-        if gram in self.rel_skipgramsuper:
-            for gram2 in self.rel_skipgramsuper[gram]: 
-                purplenodes.add(gram2)
-                edges.append(self.nodeid(gram) + " -> " + self.nodeid(gram2) + ' [ color=purple ];' )
-                
-        if gram in self.rel_skipgramsub:
-            for gram2 in self.rel_skipgramsub[gram]: 
-                if not gram2 in purplenodes:
-                    purplenodes.add(gram2)
-                    edges.append(self.nodeid(gram2) + " -> " + self.nodeid(gram) + ' [ color=purple ];' )                
+     
                 
         bluenodes = set()
 
@@ -561,6 +533,22 @@ class PatternGraph(object):
                 if not gram2 in bluenodes:
                     bluenodes.add(gram2)
                     edges.append(self.nodeid(gram2) + " -> " + self.nodeid(gram) + ' [ color=blue ];' )                   
+                    
+                    
+        purplenodes = set()
+
+        if gram in self.rel_instances:
+            for gram2 in self.rel_instances[gram]: 
+                purplenodes.add(gram2)
+                edges.append(self.nodeid(gram) + " -> " + self.nodeid(gram2) + ' [ color=purple ];' )
+                
+        if gram in self.rel_patterns:
+            for gram2 in self.rel_patterns[gram]: 
+                if not gram2 in purplenodes:
+                    purplenodes.add(gram2)
+                    edges.append(self.nodeid(gram2) + " -> " + self.nodeid(gram) + ' [ color=purple ];' )   
+                    
+                                        
                     
         nodes = blacknodes | greennodes | bluenodes | purplenodes
 
@@ -577,10 +565,11 @@ class PatternGraph(object):
                 #if node1 in self.rel_follows and node2 in self.rel_follows[node1]:
                 #    total = sum( ( x[1] for x in self.rel_follows[node1].items()) )
                 #    edges.append(self.nodeid(node2) + " -> " + self.nodeid(node1) + ' [ color=green,label="'+str(self.rel_follows[node1][node2]/float(total))+'" ];')                                    
-                if node1 in self.rel_skipgramsuper and node2 in self.rel_skipgramsuper[node1]:
+                if node1 in self.rel_instances and node2 in self.rel_instances[node1]:
                     edges.append(self.nodeid(node1) + " -> " + self.nodeid(node2) + ' [ color=purple ];' )
                 #if node1 in self.rel_skipgramsub and node2 in self.rel_skipgramsub[node1]:
                 #    edges.append(self.nodeid(node2) + " -> " + self.nodeid(node1) + ' [ color=purple ];' )
+                    
                 if node1 in self.rel_inskipcontent and node2 in self.rel_inskipcontent[node1]:
                     edges.append(self.nodeid(node1) + " -> " + self.nodeid(node2) + ' [ color=blue ];' )
                 #if node1 in self.rel_skipcontent and node2 in self.rel_skipcontent[node1]:
