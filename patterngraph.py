@@ -203,7 +203,9 @@ class PatternGraph(object):
         totaltokens = 0
         max_n = 0
         f = open(filename)
-        for line in f:
+        for i,line in enumerate(f):
+            if i % 10000 == 0:
+                print >> sys.stderr,"\t\t@" + str(i+1)
             fields = line.split('\t')
             ngram = NGram(fields[1])
             freqlist[ngram] = int(fields[2])
@@ -218,7 +220,9 @@ class PatternGraph(object):
         totaltokens = 0
         totaltypes = 0
         f = open(filename)
-        for line in f:
+        for i, line in enumerate(f):
+            if i % 10000 == 1:
+                print >> sys.stderr,"\t\t@" + str(i)
             fields = line.split('\t')
             skipgram = self.parseskipgram(fields[1], fields[9])        
             freqlist[skipgram] = int(fields[2])
@@ -292,9 +296,14 @@ class PatternGraph(object):
 
         l = len(self.freqlist.keys())        
 
+        prevp = -1
         for n in range(2,self.max_n+1):
             print >> sys.stderr,"\tProcessing " + str(n) + " grams"
-            for ngram in self.freqlist.keys():
+            for i, ngram in enumerate(self.freqlist.keys()):
+                p = round((i / float(l)) * 100)
+                if p % 10 == 0 and p != prevp:
+                    prevp = p
+                    print >>sys.stderr, '\t\t@' +  str(p) + '% -- ' + str(i) + '/' + str(l)            
                 if len(ngram) == n:
                     for subngram in ngram.subngrams():
                         if subngram in self.freqlist:
@@ -315,8 +324,7 @@ class PatternGraph(object):
                             
         print >>sys.stderr, "Computing various relations..."
     
-        prevp = -1
-    
+        prevp = -1    
         for i, gram in enumerate(self.freqlist.keys()):
             p = round((i / float(l)) * 100)
             if p % 1 == 0 and p != prevp:
