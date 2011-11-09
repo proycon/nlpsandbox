@@ -290,7 +290,10 @@ class PatternGraph(object):
 
         print >>sys.stderr, "Computing parenthood/compositionality"
 
+        l = len(self.freqlist.keys())        
+
         for n in range(2,self.max_n+1):
+            print >> sys.stderr,"\tProcessing " + str(n) + " grams"
             for ngram in self.freqlist.keys():
                 if len(ngram) == n:
                     for subngram in ngram.subngrams():
@@ -304,90 +307,53 @@ class PatternGraph(object):
                                 self.rel_parents[subngram].add(ngram)
                             except KeyError:
                                 self.rel_parents[subngram] = set( (ngram,) )
+                                
+                                
 
         print >>sys.stderr, "\tgrams with children: " + str(len(self.rel_children))                        
         print >>sys.stderr, "\tgrams with parents: " + str(len(self.rel_parents))                        
                             
-
-        print >>sys.stderr, "Computing skipgram<->ngram relations"
-
-        for n in range(2,self.max_n+1):
-            for skipgram in self.freqlist.keys():
-                if isinstance(skipgram, SkipGram):
-                    #for subngram in skipgram.parts():
-                    #    if subngram in self.freqlist:
-                    #        try:
-                    #            self.rel_skipgramsub[skipgram].add(subngram)
-                    #        except KeyError:
-                    #            self.rel_skipgramsub[skipgram] = set( (subngram,) )
-                    #            
-                    #        try:
-                    #            self.rel_skipgramsuper[subngram].add(skipgram)
-                    #        except KeyError:
-                    #            self.rel_skipgramsuper[subngram] = set( (skipgram,) )
-
-                    if skipgram in self.skipcontent:
-                        for content in self.skipcontent[skipgram].keys():
-                            for subngram in content.parts():
-                                if subngram in self.freqlist:
-                                    try:
-                                        self.rel_skipcontent[skipgram].add(subngram)
-                                    except KeyError:
-                                        self.rel_skipcontent[skipgram] = set( (subngram,) )
-                                
-                                    try:
-                                        self.rel_inskipcontent[subngram].add(skipgram)
-                                    except KeyError:
-                                        self.rel_inskipcontent[subngram] = set( (skipgram,) )
-
-            
-
-        #print >>sys.stderr, "\tskipgrams that contain known n-grams in their component: " + str(len(self.rel_skipgramsuper))        
-        #print >>sys.stderr, "\tn-grams that occur as component of a skipgram: " + str(len(self.rel_skipgramsuper))                        
-        print >>sys.stderr, "\tskipgrams that contain known n-grams in their content: " + str(len(self.rel_skipcontent))        
-        print >>sys.stderr, "\tn-grams that occur in the content of a skipgram: " + str(len(self.rel_inskipcontent))                        
-
-
-            
-                    
-        print >>sys.stderr, "Computing order relations"    
-            
-
-        for gram in self.freqlist.keys():
-            for gram1, gram2 in gram.splitpairs():
-                if gram1 in self.freqlist and gram2 in self.freqlist:                                                        
-                    if not gram2 in self.rel_follows:
-                        self.rel_follows[gram2] = {gram1: self.freqlist[gram] }
-                    elif not gram1 in self.rel_follows[gram2]:
-                        self.rel_follows[gram2][gram1] = self.freqlist[gram]
-                    else:
-                        self.rel_follows[gram2][gram1] += self.freqlist[gram]
-
-
-                    if not gram1 in self.rel_preceeds:
-                        self.rel_preceeds[gram1] = {gram2: self.freqlist[gram] }
-                    elif not gram2 in self.rel_preceeds[gram1]:
-                        self.rel_preceeds[gram1][gram2] = self.freqlist[gram]
-                    else:
-                        self.rel_preceeds[gram1][gram2] += self.freqlist[gram]            
-            
-        print >>sys.stderr, "\tgrams with a right neighbour: " + str(len(self.rel_preceeds))                        
-        print >>sys.stderr, "\tgrams with a left neighbour: " + str(len(self.rel_follows))                            
-            
-        print >>sys.stderr, "Computing skipgram scoping relations"
-
-
-        processed = {}
-        l = len(self.freqlist.keys())        
+        print >>sys.stderr, "Computing various relations..."
+    
         prevp = -1
-        for i, skipgram in enumerate(self.freqlist.keys()):
+    
+        for i, gram in enumerate(self.freqlist.keys()):
             p = round((i / float(l)) * 100)
-            if p % 5 == 0 and p != prevp:
+            if p % 1 == 0 and p != prevp:
                 prevp = p
-                print >>sys.stderr, '\t@' +  str(p) + '%'
-            
-            if isinstance(skipgram, SkipGram):
-                for skipgram2 in  self.freqlist.keys():                    
+                print >>sys.stderr, '\t@' +  str(p) + '% -- ' + str(i) + '/' + str(l)            
+                
+            if isinstance(gram, SkipGram):
+                skipgram = gram
+                #for subngram in skipgram.parts():
+                #    if subngram in self.freqlist:
+                #        try:
+                #            self.rel_skipgramsub[skipgram].add(subngram)
+                #        except KeyError:
+                #            self.rel_skipgramsub[skipgram] = set( (subngram,) )
+                #            
+                #        try:
+                #            self.rel_skipgramsuper[subngram].add(skipgram)
+                #        except KeyError:
+                #            self.rel_skipgramsuper[subngram] = set( (skipgram,) )
+    
+                #COMPUTING SKIPGRAM-NGRAP RELATIONS
+                if skipgram in self.skipcontent:
+                    for content in self.skipcontent[skipgram].keys():
+                        for subngram in content.parts():
+                            if subngram in self.freqlist:
+                                try:
+                                    self.rel_skipcontent[skipgram].add(subngram)
+                                except KeyError:
+                                    self.rel_skipcontent[skipgram] = set( (subngram,) )
+                            
+                                try:
+                                    self.rel_inskipcontent[subngram].add(skipgram)
+                                except KeyError:
+                                    self.rel_inskipcontent[subngram] = set( (skipgram,) )
+                                
+                #COMPUTING SCOPING RELATIONS
+                for skipgram2 in self.freqlist.keys():                    
                         if isinstance(skipgram2, SkipGram) and not (skipgram is skipgram2):
 
                             if skipgram.matchmask(skipgram2) and len(skipgram) > len(skipgram2):
@@ -423,16 +389,41 @@ class PatternGraph(object):
                             self.rel_patterns[instance].add(skipgram)
                         except KeyError:
                             self.rel_patterns[instance] = set( (skipgram,) )
-                    
-                
-                
+                                    
+            else:
+                #N-gram only
+                pass
 
+            for gram1, gram2 in gram.splitpairs():
+                if gram1 in self.freqlist and gram2 in self.freqlist:                                                        
+                    if not gram2 in self.rel_follows:
+                        self.rel_follows[gram2] = {gram1: self.freqlist[gram] }
+                    elif not gram1 in self.rel_follows[gram2]:
+                        self.rel_follows[gram2][gram1] = self.freqlist[gram]
+                    else:
+                        self.rel_follows[gram2][gram1] += self.freqlist[gram]
+
+
+                    if not gram1 in self.rel_preceeds:
+                        self.rel_preceeds[gram1] = {gram2: self.freqlist[gram] }
+                    elif not gram2 in self.rel_preceeds[gram1]:
+                        self.rel_preceeds[gram1][gram2] = self.freqlist[gram]
+                    else:
+                        self.rel_preceeds[gram1][gram2] += self.freqlist[gram]                  
+            
+        
+
+        #print >>sys.stderr, "\tskipgrams that contain known n-grams in their component: " + str(len(self.rel_skipgramsuper))        
+        #print >>sys.stderr, "\tn-grams that occur as component of a skipgram: " + str(len(self.rel_skipgramsuper))                        
+        print >>sys.stderr, "\tskipgrams that contain known n-grams in their content: " + str(len(self.rel_skipcontent))        
+        print >>sys.stderr, "\tn-grams that occur in the content of a skipgram: " + str(len(self.rel_inskipcontent))                        
+        print >>sys.stderr, "\tgrams with a right neighbour: " + str(len(self.rel_preceeds))                        
+        print >>sys.stderr, "\tgrams with a left neighbour: " + str(len(self.rel_follows))                            
         print >>sys.stderr, "\tskipgrams with a wider variant: " + str(len(self.rel_wider))                        
         print >>sys.stderr, "\tskipgrams with a narrower variant: " + str(len(self.rel_narrower))                        
         print >>sys.stderr, "\tskipgrams that have instances: " + str(len(self.rel_instances))                                            
         print >>sys.stderr, "\tgrams that are covered by a pattern: " + str(len(self.rel_patterns))                                            
 
-        del processed 
 
     def query(self, s):
         gram = self.parseskipgram(s)
