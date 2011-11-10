@@ -26,16 +26,15 @@ jaccard = {}
 
 for source in sourceindex:
     maxcooc = 0    
+    jaccard = {}
     for target in targetindex:
-        if not source in jaccard:
-            jaccard[source] = {}
-        jaccard[source][target] = len(sourceindex[source] & targetindex[target]) / float(len(sourceindex[source] | targetindex[target])) #intersection / union
+        jaccard[target] = len(sourceindex[source] & targetindex[target]) / float(len(sourceindex[source] | targetindex[target])) #intersection / union
         if jaccard[source][target] > maxcooc:
-            maxcooc = jaccard[source][target]
+            maxcooc = jaccard[target]
                 
-        for target in jaccard[source]:
-            if jaccard[source][target] == maxcooc:
-                print source + '\t' + target + '\t' + str(jaccard[source][target])
+        for target in jaccard:
+            if jaccard[target] == maxcooc:
+                print source + '\t' + target + '\t' + str(jaccard[target])
 
             
         
