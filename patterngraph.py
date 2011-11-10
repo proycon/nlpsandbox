@@ -247,13 +247,13 @@ class PatternGraph(object):
 
         if skipcontentdata:
             skipcontentdata = skipcontentdata.split('|')            
-            skipcontentdata = dict(zip([ self.parseskipgram(x) for x in skipcontentdata[0::2] ], skipcontentdata[1::2]))    
+            skipcontentdata = dict(zip( ( self.parseskipgram(x) for x in skipcontentdata[0::2] ), skipcontentdata[1::2]))    
             self.skipcontent[skipgram] = skipcontentdata
                                 
         return skipgram
         
     def __iter__(self):
-        for x in self.freqlist.keys():
+        for x in self.freqlist:
             yield x
         
     def __init__(self, ngramfile, skipgramfile):
@@ -292,14 +292,14 @@ class PatternGraph(object):
         print >>sys.stderr, "\t" + str(self.totalskipgramtypes) + " types, " +  str(self.totalskipgramtokens) + " tokens"
 
 
-        print >>sys.stderr, "Computing parenthood/compositionality"
+        print >>sys.stderr, "Computing subsumption relations"
 
-        l = len(self.freqlist.keys())        
+        l = len(self.freqlist)        
 
         prevp = -1
         for n in range(2,self.max_n+1):
             print >> sys.stderr,"\tProcessing " + str(n) + " grams"
-            for i, ngram in enumerate(self.freqlist.keys()):
+            for i, ngram in enumerate(self.freqlist):
                 p = round((i / float(l)) * 100)
                 if p % 10 == 0 and p != prevp:
                     prevp = p
@@ -325,7 +325,7 @@ class PatternGraph(object):
         print >>sys.stderr, "Computing various relations..."
     
         prevp = -1    
-        for i, gram in enumerate(self.freqlist.keys()):
+        for i, gram in enumerate(self.freqlist):
             p = round((i / float(l)) * 100)
             if p % 1 == 0 and p != prevp:
                 prevp = p
@@ -347,7 +347,7 @@ class PatternGraph(object):
     
                 #COMPUTING SKIPGRAM-NGRAP RELATIONS
                 if skipgram in self.skipcontent:
-                    for content in self.skipcontent[skipgram].keys():
+                    for content in self.skipcontent[skipgram]:
                         for subngram in content.parts():
                             if subngram in self.freqlist:
                                 try:
@@ -361,7 +361,7 @@ class PatternGraph(object):
                                     self.rel_inskipcontent[subngram] = set( (skipgram,) )
                                 
                 #COMPUTING SCOPING RELATIONS
-                for skipgram2 in self.freqlist.keys():                    
+                for skipgram2 in self.freqlist:                    
                         if isinstance(skipgram2, SkipGram) and not (skipgram is skipgram2):
 
                             if skipgram.matchmask(skipgram2) and len(skipgram) > len(skipgram2):
@@ -626,6 +626,14 @@ class PatternGraph(object):
         dot += "}\n"
                             
         return DotGraph(dot)
+
+    def save(self, filename):
+        f = open(filename,'w')
+        
+        f.close()
+    
+        
+        
         
 
 class DotGraph():
