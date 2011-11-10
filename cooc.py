@@ -33,7 +33,7 @@ for source in sourceindex:
         if jaccard[source][target] > maxcooc:
             maxcooc = jaccard[source][target]
                 
-        for target in targetindex:
+        for target in jaccard[source]:
             if jaccard[source][target] == maxcooc:
                 print source + '\t' + target + '\t' + str(jaccard[source][target])
 
