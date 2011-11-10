@@ -29,12 +29,12 @@ for source in sourceindex:
     jaccard = {}
     for target in targetindex:
         jaccard[target] = len(sourceindex[source] & targetindex[target]) / float(len(sourceindex[source] | targetindex[target])) #intersection / union
-        if jaccard[source][target] > maxcooc:
+        if jaccard[target] > maxcooc:
             maxcooc = jaccard[target]
                 
-        for target in jaccard:
-            if jaccard[target] == maxcooc:
-                print source + '\t' + target + '\t' + str(jaccard[target])
+    for target in jaccard:
+        if jaccard[target] == maxcooc:
+            print source + '\t' + target + '\t' + str(jaccard[target])
 
             
         
