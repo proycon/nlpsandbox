@@ -12,8 +12,8 @@ def loadindex(filename):
     with open(sourcefile) as f:
         for line in f:
             fields = line.split('\t')        
-            if fields:
-                index[fields[0]] = set(( int(x) for x in indices.strip().split(' ')))
+            if len(fields) == 2:
+                index[fields[0]] = set(( int(x) for x in fields[1].strip().split(' ')))
     return index
     
 
