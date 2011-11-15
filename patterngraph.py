@@ -42,11 +42,11 @@ class NGram(object):
                     yield NGram(self.data[begin:begin+length])
     
     def prefixes(self):
-        for length in range(len(self.data), len(self.data) - 1):
+        for length in range(0, len(self.data) - 1):
             yield NGram(self.data[:length])
         
     def suffixes(self):
-        for length in range(len(self.data), len(self.data) - 1):
+        for length in range(0, len(self.data) - 1):
             yield NGram(self.data[-length:])
             
     def __contains__(self, other):
