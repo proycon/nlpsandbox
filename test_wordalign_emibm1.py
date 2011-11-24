@@ -58,7 +58,7 @@ while not converged:
     print "Round " + str(i)
 
     total = {}
-    count = {}
+    
     
     converged = True
     totaldivergence = 0
@@ -70,13 +70,18 @@ while not converged:
         stotal = {}
         for wt in targetsentence:    
             stotal[wt] = sum( ( transprob[(wt,ws)] for ws in sourcesentence if (wt,ws) in transprob ) )        
-            
+        
+        #print "sentencetotal(targetword) for normalisation:"
+        #print stotal
+    
+        count = {}        
         #collect counts
         for wt in targetsentence:
             for ws in sourcesentence:
                 try:
                     value =  transprob[(wt,ws)] / float(stotal[wt])
                 except KeyError:
+                    value = 0
                     continue #no problem
                 try:
                     count[(wt,ws)] += value 
@@ -92,19 +97,21 @@ while not converged:
         for wt in targetsentence:
             for ws in sourcesentence:
                 try:
-                    prevvalue = transprob[(wt,ws)]
+                    prevtransprob = transprob[(wt,ws)]
                 except KeyError:
-                    prevvalue = 0
+                    prevtransprob = 0
                 try:
-                    value = count[(wt,ws)] / float(total[ws])
-                    transprob[(wt,ws)] = value
+                    newtransprob = count[(wt,ws)] / float(total[ws])
+                    transprob[(wt,ws)] = newtransprob
                 except KeyError:
-                    value = 0              
-                divergence = abs(value - prevvalue)
+                    newtransprob = 0              
+                divergence = abs(newtransprob - prevtransprob)
                 totaldivergence += divergence
                 c += 1
     
-    print transprob
+    print "Translation probabilities p(targetword|sourceword) : "
+    for targetword, sourceword in sorted(transprob):
+         print "\tp("+targetword+"|"+sourceword+") = " + str(transprob[(targetword,sourceword)])    
     
     avdivergence = totaldivergence / float(c)
     print "\tTotal average divergence: " + str(avdivergence)
