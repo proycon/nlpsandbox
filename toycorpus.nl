@@ -1,0 +1,9 @@
+de grote hond
+de kleine hond
+de grote kat
+de kleine kat
+de rode kat
+het mooie huis
+het rode huis
+de rode auto
+het grote bos
