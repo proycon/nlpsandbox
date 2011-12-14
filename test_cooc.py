@@ -2,6 +2,7 @@
 #-*- coding:utf-8 -*-
 
 import sys
+from pynlpl.textprocessors import MultiWindower
 
 sourcefile = sys.argv[1]
 targetfile = sys.argv[2]
@@ -12,11 +13,11 @@ def makeindex(filename):
         for i, line in enumerate(f):
             if line:
                 words = line.strip().split(' ')
-                for word in words:
-                    if word in index:
-                        index[word].add(i)
+                for ngram in MultiWindower(words,1,8):
+                    if ngram in index:
+                        index[ngram].add(i)
                     else:
-                        index[word] = set( (i,) )
+                        index[ngram] = set( (i,) )
     return index
     
 
@@ -24,6 +25,9 @@ print >>sys.stderr,"Computing source index"
 sourceindex = makeindex(sourcefile)
 print >>sys.stderr,"Computing target index"
 targetindex = makeindex(targetfile)
+
+print len(sourceindex)
+print len(targetindex)
 
 jaccard = {}
 
@@ -37,7 +41,7 @@ for source in sourceindex:
                 
     for target in jaccard:
         if jaccard[target] == maxcooc:
-            print source + '\t' + target + '\t' + str(jaccard[target])
+            print repr(source) + '\t' + repr(target) + '\t' + str(jaccard[target])
 
             
         

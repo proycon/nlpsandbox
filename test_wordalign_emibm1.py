@@ -30,12 +30,12 @@ target.close()
 
 
 #initialise
-count = {}
-totalcount = {}
-for ws in sourcesentence:
-    totalcount[ws] = 0
-    for wt in targetsentence:
-        count[(wt,ws)] = 0  #count(wt|ws)
+#count = {}
+#totalcount = {}
+#for ws in sourcesentence:
+#    totalcount[ws] = 0
+#    for wt in targetsentence:
+#        count[(wt,ws)] = 0  #count(wt|ws)
 
 
 transprob = {}
@@ -47,7 +47,7 @@ i = 0
 #Initialise uniformly
 for j, (sourcesentence, targetsentence) in enumerate(sentencepairs):
     for ws in sourcesentence:
-        v = 1 /float(len(targetsentence))
+        v = 1 /float(len(sentence))
         for wt in targetsentence:
             transprob[(wt,ws)] = v
     
@@ -58,7 +58,7 @@ while not converged:
     print "Round " + str(i)
 
     total = {}
-    
+    count = {}    
     
     converged = True
     totaldivergence = 0
@@ -72,9 +72,8 @@ while not converged:
             stotal[wt] = sum( ( transprob[(wt,ws)] for ws in sourcesentence if (wt,ws) in transprob ) )        
         
         #print "sentencetotal(targetword) for normalisation:"
-        #print stotal
+        #print stotal    
     
-        count = {}        
         #collect counts
         for wt in targetsentence:
             for ws in sourcesentence:
@@ -91,7 +90,8 @@ while not converged:
                     total[ws] += value 
                 except KeyError:
                     total[ws] = value
-            
+        
+        print "count:" , count
         
         #estimate probabilities
         for wt in targetsentence:

@@ -633,7 +633,10 @@ class PatternGraph(object):
         f.close()
     
         
-        
+class PatternGraph2(PatternGraph):        
+
+    def __init__(self, ngramfile):
+        self.freqlist, self.totalngramtokens, self.max_n = self.loadngrams(ngramfile)
         
 
 class DotGraph():
