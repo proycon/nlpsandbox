@@ -18,7 +18,7 @@ fi
 cd ..
 svn co https://ilk.uvt.nl/svn/trunk/sources/TimblServer
 cd TimblServer && svn update
-sh bootstrap && ./configure --prefix=$TARGET && make && make install
+sh bootstrap && ./configure --prefix=$TARGET --with-timbl=$TARGET && make && make install
 if [ $? -ne 0 ]; then
         echo "Error during installation of TimblServer" >&2
         exit 1
@@ -26,7 +26,7 @@ fi
 cd ..
 svn co https://ilk.uvt.nl/svn/trunk/sources/Mbt3
 cd Mbt3 && svn update
-sh bootstrap && ./configure --prefix=$TARGET && make && make install
+sh bootstrap && ./configure --prefix=$TARGET --with-timbl=$TARGET && make && make install
 if [ $? -ne 0 ]; then
         echo "Error during installation of Mbt"
         exit 1
@@ -42,7 +42,7 @@ fi
 cd ..
 svn co https://ilk.uvt.nl/svn/sources/ucto/trunk ucto
 cd ucto && svn update
-sh bootstrap && ./configure --prefix=$TARGET && make && make install
+sh bootstrap && ./configure --prefix=$TARGET --with-folia=$TARGET && make && make install
 if [ $? -ne 0 ]; then
         echo "Error during installation of ucto" >&2
         exit 1
@@ -50,7 +50,7 @@ fi
 cd ..
 svn co https://ilk.uvt.nl/svn/sources/Frog/trunk Frog
 cd Frog && svn update
-sh bootstrap && ./configure --prefix=$TARGET && make && make install
+sh bootstrap && ./configure --prefix=$TARGET --with-ucto=$TARGET --with-folia=$TARGET  --with-timbl=$TARGET --with-timblserver=$TARGET --with-mbt=$TARGET   && make && make install
 if [ $? -ne 0 ]; then
         echo "Error during installation of Frog" >&2
         exit 1
