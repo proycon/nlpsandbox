@@ -55,6 +55,14 @@ if [ $? -ne 0 ]; then
         echo "Error during installation of Frog" >&2
         exit 1
 fi
+cd ..
+svn co https://ilk.uvt.nl/svn/sources/frogdata/trunk frogdata
+cd frogdata && svn update
+sh bootstrap && ./configure --prefix=$TARGET  && make && make install
+if [ $? -ne 0 ]; then
+        echo "Error during installation of Frogdata" >&2
+        exit 1
+fi
 cd ../..
 git clone git://github.com/proycon/pynlpl.git
 cd pynlpl && git pull
