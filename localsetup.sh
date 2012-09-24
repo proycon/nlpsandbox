@@ -7,6 +7,14 @@ TARGET=$1
 cd $TARGET
 mkdir src bin etc lib share
 cd src
+svn co https://ilk.uvt.nl/svn/sources/libticcutils/trunk libticcutils
+cd libticcutils
+svn update
+bash bootstrap && ./configure --prefix=$TARGET && make && make install
+if [ $? -ne 0 ]; then
+        echo "Error during installation of libticcutils" >&2
+        exit 1
+fi
 svn co https://ilk.uvt.nl/svn/trunk/sources/Timbl6
 cd Timbl6
 svn update
