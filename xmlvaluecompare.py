@@ -79,7 +79,7 @@ def process(dir, sourceext,targetext):
                 revindex2 = {}                
                 xmlcompare(f, targetf, revindex1, revindex2)
         elif os.path.isdir(f):
-            process(f)
+            process(f, sourceext, targetext)
             
 def usage():
     print >>sys.stderr,"Syntax: xmlvaluecompare.py sourcefile targetfile"
