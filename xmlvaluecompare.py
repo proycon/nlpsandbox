@@ -124,9 +124,9 @@ if __name__ == "__main__":
     revindex2 = {}
 
     if sourceext and sourceext[0] != '.':
-        sourceext += '.' + sourceext
+        sourceext = '.' + sourceext
     if targetext and targetext[0] != '.':
-        targetext += '.' + targetext
+        targetext = '.' + targetext
 
     if dir and sourceext and targetext:            
         process(dir, diffonly, sourceext, targetext)
