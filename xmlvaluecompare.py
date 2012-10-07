@@ -80,7 +80,7 @@ def process(dir, diffonly, sourceext,targetext):
                 revindex2 = {}                
                 xmlcompare(f, targetf, diffonly, revindex1, revindex2)
             else:
-                print "#Warning: No target file for " + f
+                print "#Warning: No target file " + targetf
         elif os.path.isdir(f):
             process(f, diffonly, sourceext, targetext)
             
