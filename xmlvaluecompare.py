@@ -69,8 +69,18 @@ def xmlcompare(filename1, filename2, diffonly, revindex1, revindex2):
             print ">> \"" + value.encode('utf-8') + "\":"
             for path, count in revindex2[value].items():
                 print "\t>" + path + " -- ", count
+
+def addmapping(mapping, missing, revindex1, revindex2):
+    for value in set( set(revindex1.keys()) | set(revindex2.keys()) ):
+        if value in revindex1 and value in revindex2: 
+            for path, count in revindex1[value].items():
+                for path2, count2 in revindex2[value].items():    
+                    mapping[(path,path2)] += 1              
+        elif value in revindex1:
+            for path, count in revindex1[value].items():
+                missing[path] += 1 
                 
-def process(dir, diffonly, sourceext,targetext):
+def process(dir, diffonly, sourceext,targetext, mapping, missing):
     print "#Processing " + dir
     for f in glob.glob(dir + '/*'):
         if f[-len(sourceext):] == sourceext:            
@@ -79,10 +89,11 @@ def process(dir, diffonly, sourceext,targetext):
                 revindex1 = {}
                 revindex2 = {}                
                 xmlcompare(f, targetf, diffonly, revindex1, revindex2)
+                addmapping(mapping,missing, revindex1,revindex2)
             else:
                 print "#Warning: No target file " + targetf
         elif os.path.isdir(f):
-            process(f, diffonly, sourceext, targetext)
+            process(f, diffonly, sourceext, targetext, mapping,missing)
             
 def usage():
     print >>sys.stderr,"Syntax: xmlvaluecompare.py sourcefile targetfile"
@@ -122,6 +133,8 @@ if __name__ == "__main__":
 
     revindex1 = {}
     revindex2 = {}
+    mapping = {}
+    missing = {}
 
     if sourceext and sourceext[0] != '.':
         sourceext = '.' + sourceext
@@ -129,7 +142,21 @@ if __name__ == "__main__":
         targetext = '.' + targetext
 
     if dir and sourceext and targetext:            
-        process(dir, diffonly, sourceext, targetext)
+        process(dir, diffonly, sourceext, targetext, mapping, missing)
+        
+        print
+        print "#Possible mappings"
+        for pathpair, doccount in mapping.items():
+            sourcepath, targetpath = pathpair
+            print "! " + sourcepath + " == " + targetpath + "  (" + str(doccount) + ")"
+            
+            
+            
+        print
+        print "#Possibly unmapped:"            
+        for path, doccount in missing.items():
+            print "? " + path + "  (" + str(doccount) + ")"
+                    
     else:        
         try:
             filename1 = args[0]
@@ -138,3 +165,4 @@ if __name__ == "__main__":
             usage()        
         xmlcompare(filename1,filename2, diffonly, revindex1, revindex2)
         
+    
