@@ -133,8 +133,8 @@ if __name__ == "__main__":
 
     revindex1 = {}
     revindex2 = {}
-    mapping = {}
-    missing = {}
+    mapping = Counter()
+    missing = Counter()
 
     if sourceext and sourceext[0] != '.':
         sourceext = '.' + sourceext
