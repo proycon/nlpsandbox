@@ -4,7 +4,8 @@
 import lxml.etree
 import sys
 from collections import Counter
-
+import glob
+import os
 
 def nons(s):
     copy = True
@@ -41,15 +42,14 @@ def revindex(e, index):
         revindex(element, index)
         
 
-def xmlcompare(filename1, filename2, diffonly):
+def xmlcompare(filename1, filename2, diffonly, revindex1, revindex2):
+    print "Comparing " + filename1 + " with " + filename2
     #mapping = {} #source => target => count
     
     doc1 = lxml.etree.parse(filename1)
-    revindex1 = {}
     revindex(doc1.getroot(), revindex1) #value => [element/attr]
     
     doc2 = lxml.etree.parse(filename2)
-    revindex2 = {}
     revindex(doc2.getroot(), revindex2) #value => [element/attr]
     
     #values in source and not in target
@@ -69,33 +69,68 @@ def xmlcompare(filename1, filename2, diffonly):
             print ">> \"" + value.encode('utf-8') + "\":"
             for path, count in revindex2[value].items():
                 print "\t>" + path + " -- ", count
+                
+def process(dir, sourceext,targetext):
+    for f in glob.glob(dir + '/*'):
+        if f[-len(sourceext):] == sourceext:            
+            targetf = f[:-len(sourceext)] + targetext
+            if os.path.exists(targetf):
+                revindex1 = {}
+                revindex2 = {}                
+                xmlcompare(f, targetf, revindex1, revindex2)
+        elif os.path.isdir(f):
+            process(f)
             
 def usage():
     print >>sys.stderr,"Syntax: xmlvaluecompare.py sourcefile targetfile"
+    print >>sys.stderr,"Options:"
+    print >>sys.stderr,"    -d           Show differences only"
+    print >>sys.stderr,"Process multiple files in batch, aggregate results:"
+    print >>sys.stderr,"    -s [ext]     Source extension"
+    print >>sys.stderr,"    -t [ext]     Target extension"
+    print >>sys.stderr,"    -D           Directory"
     sys.exit(2)
 
 if __name__ == "__main__": 
     import getopt
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "dh")
+        opts, args = getopt.getopt(sys.argv[1:], "dhs:t:D:")
     except getopt.GetoptError, err:
         print str(err)
         usage()
         sys.exit(2)
 
     diffonly = False
+    sourceext = targetext = ""
 
     for o, a in opts:
         if o == '-d':
             diffonly = True
         elif o == '-h':
             usage()
+        elif o == '-s':
+            sourceext = a
+        elif o == '-t':
+            targetext = a
+        elif o == '-D':
+            dir = a
+
+    revindex1 = {}
+    revindex2 = {}
+
+    if sourceext and sourceext[0] != '.':
+        sourceext += '.' + sourceext
+    if targetext and targetext[0] != '.':
+        targetext += '.' + targetext
+
+    if dir and sourceext and targetext:            
+        process(dir, sourceext, targetext)
+    else:        
+        try:
+            filename1 = args[0]
+            filename2 = args[1]
+        except:
+            usage()        
+        xmlcompare(filename1,filename2, diffonly, revindex1, revindex2)
         
-    try:
-        filename1 = args[0]
-        filename2 = args[1]
-    except:
-        usage()        
-    xmlcompare(filename1,filename2, diffonly)
-    
