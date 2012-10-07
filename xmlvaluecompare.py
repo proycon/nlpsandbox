@@ -71,6 +71,7 @@ def xmlcompare(filename1, filename2, diffonly, revindex1, revindex2):
                 print "\t>" + path + " -- ", count
                 
 def process(dir, sourceext,targetext):
+    print >>sys.stderr, "Processing " + dir
     for f in glob.glob(dir + '/*'):
         if f[-len(sourceext):] == sourceext:            
             targetf = f[:-len(sourceext)] + targetext
