@@ -43,7 +43,7 @@ def revindex(e, index):
         
 
 def xmlcompare(filename1, filename2, diffonly, revindex1, revindex2):
-    print "Comparing " + filename1 + " with " + filename2
+    print "#Comparing " + filename1 + " with " + filename2
     #mapping = {} #source => target => count
     
     doc1 = lxml.etree.parse(filename1)
@@ -70,17 +70,17 @@ def xmlcompare(filename1, filename2, diffonly, revindex1, revindex2):
             for path, count in revindex2[value].items():
                 print "\t>" + path + " -- ", count
                 
-def process(dir, sourceext,targetext):
-    print >>sys.stderr, "Processing " + dir
+def process(dir, diffonly, sourceext,targetext):
+    print "#Processing " + dir
     for f in glob.glob(dir + '/*'):
         if f[-len(sourceext):] == sourceext:            
             targetf = f[:-len(sourceext)] + targetext
             if os.path.exists(targetf):
                 revindex1 = {}
                 revindex2 = {}                
-                xmlcompare(f, targetf, revindex1, revindex2)
+                xmlcompare(f, targetf, diffonly, revindex1, revindex2)
         elif os.path.isdir(f):
-            process(f, sourceext, targetext)
+            process(f, diffonly, sourceext, targetext)
             
 def usage():
     print >>sys.stderr,"Syntax: xmlvaluecompare.py sourcefile targetfile"
@@ -104,6 +104,7 @@ if __name__ == "__main__":
 
     diffonly = False
     sourceext = targetext = ""
+    dir = None
 
     for o, a in opts:
         if o == '-d':
@@ -126,7 +127,7 @@ if __name__ == "__main__":
         targetext += '.' + targetext
 
     if dir and sourceext and targetext:            
-        process(dir, sourceext, targetext)
+        process(dir, diffonly, sourceext, targetext)
     else:        
         try:
             filename1 = args[0]
