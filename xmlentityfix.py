@@ -29,6 +29,7 @@ for line in f:
             o += c                 
 f.close()
 
+print >>sys.stderr, "Writing ", sys.argv[1]
 f = codecs.open(sys.argv[1],'w','utf-8')
 f.write(o)
 f.close()
