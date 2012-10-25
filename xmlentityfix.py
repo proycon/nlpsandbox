@@ -26,8 +26,7 @@ for line in f:
             else:
                 o += c        
         else:
-            o += c
-    o += "\n"                    
+            o += c                 
 f.close()
 
 f = codecs.open(sys.argv[1],'w','utf-8')
