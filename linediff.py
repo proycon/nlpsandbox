@@ -96,25 +96,28 @@ while not done:
         
         
         for i, line in enumerate(lines):
-            print " #" + str(i) +": "
+            line = line.strip()
+            print " #" + str(i) +": ",
             if i == 0:
                 reftokens = line.split(' ')
                 print line
             else:
                 #highlight differences
                 tokens = line.split(' ')
-                for reftoken, token in zip(reftokens, tokens):
+                for j, (reftoken, token) in enumerate(zip(reftokens, tokens)):
                     if token == reftoken:
-                        print token + ' ',
+                        print green(token),                    
+                    elif (j > 0 and token == reftokens[j-1]) or (j < len(reftokens) -1 and token == reftokens[j+1]):
+                        print white(token),
                     elif token in reftokens:
-                        print yellow(token) + ' ',
+                        print yellow(token),
                     else:
-                        print red(token) + ' ',     
-                    print                           
+                        print red(token),     
+                print                           
             
 print >>sys.stderr, "Total lines: ", linenum - 1    
-print >>sys.stderr, "Matches: ", matches, (matches / float(linenum - 1)) * 100 + str('%')
-print >>sys.stderr, "Differences: ", differences, (differences / float(linenum - 1)) * 100 + str('%')
+print >>sys.stderr, "Matches: ", matches, str(matches / float(linenum - 1) * 100) + str('%')
+print >>sys.stderr, "Differences: ", differences, str(differences / float(linenum - 1) * 100) + str('%')
 
     
     
