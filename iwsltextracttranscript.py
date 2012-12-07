@@ -19,11 +19,11 @@ import codecs
 
 
 f = codecs.open(sys.argv[1],'r')
-lines1 = f.readlines()
+lines1 = list( f.readlines())
 f.close()
 
 f = codecs.open(sys.argv[2],'r')
-lines2 = f.readlines()
+lines2 = list(f.readlines())
 f.close()
 
 f1 = codecs.open(sys.argv[3],'w')
