@@ -42,20 +42,3 @@ f2.close()
     
 
 
-
-
-
-
-
-
-
-
-
-for line in f:
-    line = line.strip()
-    if line.strip() == "<transcript>":
-        copy = True
-    elif line.strip() == "</transcript>":
-        copy = False
-    elif copy:
-        print line
