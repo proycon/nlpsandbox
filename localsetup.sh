@@ -15,6 +15,7 @@ if [ $? -ne 0 ]; then
         echo "Error during installation of libticcutils" >&2
         exit 1
 fi
+cd ..
 svn co https://ilk.uvt.nl/svn/trunk/sources/Timbl6
 cd Timbl6
 svn update

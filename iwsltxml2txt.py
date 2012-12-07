@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf8 -*-
 
-import lxml
+import lxml.etree
 import sys
 
 doc = lxml.etree.parse(sys.argv[1]).getroot()
