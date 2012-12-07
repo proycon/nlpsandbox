@@ -4,30 +4,16 @@
 import sys
 import codecs
 
-# copy = False 
-# f = codecs.open(sys.argv[1],'r')
-# for line in f:
-    # line = line.strip()
-    # if line.strip() == "<transcript>":
-        # copy = True
-    # elif line.strip() == "</transcript>":
-        # copy = False
-    # elif copy:
-        # print line
-# f.close()
-
-
-
-f = codecs.open(sys.argv[1],'r')
+f = codecs.open(sys.argv[1],'r', 'utf-8')
 lines1 = list( f.readlines())
 f.close()
 
-f = codecs.open(sys.argv[2],'r')
+f = codecs.open(sys.argv[2],'r', 'utf-8')
 lines2 = list(f.readlines())
 f.close()
 
-f1 = codecs.open(sys.argv[3],'w')
-f2 = codecs.open(sys.argv[4],'w')
+f1 = codecs.open(sys.argv[3],'w', 'utf-8')
+f2 = codecs.open(sys.argv[4],'w', 'utf-8')
 
 for line1,line2 in zip(lines1, lines2):
     line1 = line1.strip()
