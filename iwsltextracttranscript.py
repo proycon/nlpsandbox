@@ -19,8 +19,8 @@ for line1,line2 in zip(lines1, lines2):
     line1 = line1.strip()
     line2 = line2.strip()
     if line1[0] != '<' and line2[0] != '<' and line1[-1] != '>' and line2[-1] != '>':
-        f1.write(line1)
-        f2.write(line2)
+        f1.write(line1+"\n")
+        f2.write(line2+"\n")
         
 f1.close()
 f2.close()
