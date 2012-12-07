@@ -105,7 +105,7 @@ while not done:
                 #highlight differences
                 tokens = line.split(' ')
                 for j, (reftoken, token) in enumerate(zip(reftokens, tokens)):
-                    if token == reftoken:
+                    if token == reftoken:mt
                         print green(token).encode('utf-8'),                    
                     elif (j > 0 and token == reftokens[j-1]) or (j < len(reftokens) -1 and token == reftokens[j+1]):
                         print white(token).encode('utf-8'),
