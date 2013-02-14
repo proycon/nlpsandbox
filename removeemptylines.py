@@ -21,10 +21,9 @@ for filename in sys.argv[1:]:
     f_out = open(filename + '.tmp','w')    
     for i, line in enumerate(f_in):        
         if not i in deletelines:
-            f.write(line)
+            f_out.write(line)
     f_in.close()
     f_out.close()
     os.rename(filename + '.tmp', filename)
     
-            
             
