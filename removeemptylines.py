@@ -17,7 +17,7 @@ for filename in sys.argv[1:]:
     
     
 for filename in sys.argv[1:]:
-    f_in = open(filename + '.tmp','r')
+    f_in = open(filename,'r')
     f_out = open(filename + '.tmp','w')    
     for i, line in enumerate(f_in):        
         if not i in deletelines:
