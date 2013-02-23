@@ -87,26 +87,26 @@ if __name__ == "__main__":
     if keepsettings:
         for x in keepsettings.split(','):
             if ':' in x:
-                low,high = x.split(':')
-                if low < 0: low = fieldcount + int(low) + 1
-                if high < 0: high = fieldcount + int(high) + 1
-                for i in range(int(low), int(high) + 1):
+                low,high = [ int(y) for y in x.split(':') ]                
+                if low) < 0: low = fieldcount + low + 1
+                if high) < 0: high = fieldcount + high + 1
+                for i in range(low, high + 1):
                     keep.append(i)
             else:
-                if int(x) < 0: x = fieldcount + int(x) + 1
-                keep.append(int(x))
+                if int(x) < 0: x = fieldcount + x + 1
+                keep.append(x)
     
     if deletesettings:
         for x in deletesettings.split(','):
             if ':' in x:
-                low,high = x.split(':')
-                if low < 0: low = fieldcount + int(low) + 1
-                if high < 0: high = fieldcount + int(high) + 1
-                for i in range(int(low), int(high) + 1):
+                low,high = [ int(y) for y in x.split(':') ]                
+                if low) < 0: low = fieldcount + low + 1
+                if high) < 0: high = fieldcount + high + 1
+                for i in range(low, high + 1):
                     delete.append(i)
             else:
-                if int(x) < 0: x = fieldcount + int(x) + 1
-                delete.append(int(x))         
+                if int(x) < 0: x = fieldcount + x + 1
+                delete.append(x)       
     
     if keep: 
         default = 'delete'
