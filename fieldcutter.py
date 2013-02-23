@@ -293,5 +293,5 @@ if __name__ == "__main__":
             print >>sys.stderr,"------------------------------------------------------------------------"
             s = float(sum(freq[fieldnum].values()))
             for i, (word, count) in enumerate(sorted(freq[fieldnum].items(), key=lambda x: x[1] * -1)):
-                print >>sys.stderr, str(i) + ")\t" + word.encode(encoding) + "\t" + str(count) + "\t" + str(count / s * 100) + '%' 
+                print >>sys.stderr, str(i+1) + ")\t" + word.encode(encoding) + "\t" + str(count) + "\t" + str(count / s * 100) + '%' 
             
