@@ -173,7 +173,7 @@ if __name__ == "__main__":
         
     if DOSTATS:
         for i in sorted(sumdata):
-            print >>sys.stderr, "column #" + str(i) + " sum="+ str(sum(sumdata[i])) + "\taverage=" + str(sum(sumdata[i]) / float(rowcount))
+            print >>sys.stderr, "column #" + str(i) + " sum="+ str(sumdata[i]) + "\taverage=" + str(sumdata[i] / float(rowcount))
     
     if DOHIST:        
         for i, (word, count) in enumerate(sorted(freq, key=lambda x: x[1] * -1)):
