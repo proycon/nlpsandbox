@@ -88,8 +88,8 @@ if __name__ == "__main__":
         for x in keepsettings.split(','):
             if ':' in x:
                 low,high = [ int(y) for y in x.split(':') ]                
-                if low) < 0: low = fieldcount + low + 1
-                if high) < 0: high = fieldcount + high + 1
+                if low < 0: low = fieldcount + low + 1
+                if high < 0: high = fieldcount + high + 1
                 for i in range(low, high + 1):
                     keep.append(i)
             else:
@@ -100,8 +100,8 @@ if __name__ == "__main__":
         for x in deletesettings.split(','):
             if ':' in x:
                 low,high = [ int(y) for y in x.split(':') ]                
-                if low) < 0: low = fieldcount + low + 1
-                if high) < 0: high = fieldcount + high + 1
+                if low < 0: low = fieldcount + low + 1
+                if high < 0: high = fieldcount + high + 1
                 for i in range(low, high + 1):
                     delete.append(i)
             else:
