@@ -147,9 +147,12 @@ if __name__ == "__main__":
             else:
                 print line.strip().encode(encoding)
             continue
-    
-        fields = line.strip().split(delimiter)
         
+            
+        fields = line.strip().split(delimiter)
+        if len(fields) != fieldcount:
+            print >>sys.stderr, "Number of columns in line " + str(rowcount) + " deviates, expected " + str(fieldcount) + ", got " + str(len(fields)) 
+            sys.exit(5)
         
         
         if select:
