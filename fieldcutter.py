@@ -169,13 +169,18 @@ if __name__ == "__main__":
         if select:
             currentselect = select
             for i in reversed(range(1,len(fields)+1)):
-                if fields[i-1].isdigit():
+                isdigit = True
+                try:
+                    x = float(fields[i-1])
+                except:                    
+                    isdigit = False
+                if isdigit:
                     currentselect = currentselect.replace('$' + str(i), fields[i-1])
                 else:
                     currentselect = currentselect.replace('$' + str(i), '"' + fields[i-1].replace('"','\"') + '"')
-            #print >>sys.stderr,"DEBUG=["+ currentselect+"]"
-            if not eval(currentselect):
-                continue
+            print >>sys.stderr,"DEBUG=["+ currentselect+"]"
+            #if not eval(currentselect):
+            #    continue
     
         rowcount_out += 1
         
