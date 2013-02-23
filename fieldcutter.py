@@ -51,13 +51,6 @@ if __name__ == "__main__":
             encoding = a
         elif o == "-f":	
             filename = a              
-            f = codecs.open(filename,'r',encoding)
-            for line in f:
-                if line[0] != '#':                    
-                    fieldcount = len(line.strip().split(delimiter))
-                    print >>sys.stderr,"Number of fields: ", fieldcount
-                    break
-            f.close()
         elif o == "-k":	
             keepsettings = a
         elif o == "-d":	
@@ -83,6 +76,18 @@ if __name__ == "__main__":
     if not filename:    
         usage()
         sys.exit(2)
+
+    if not os.path.exists(filename):
+        print >>sys.stderr,"No such file: " + filename
+        sys.exit(2)
+    
+    f = codecs.open(filename,'r',encoding)
+    for line in f:
+        if line[0] != '#':                    
+            fieldcount = len(line.strip().split(delimiter))
+            print >>sys.stderr,"Number of fields: ", fieldcount
+            break
+    f.close()
     
     if keepsettings:
         for x in keepsettings.split(','):
