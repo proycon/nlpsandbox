@@ -22,6 +22,16 @@ def usage():
     print >>sys.stderr," -C [char]        Ignore comments, line starting with the specified character. Example: -C #"
     print >>sys.stderr," -n               Number lines"
     print >>sys.stderr," -N               Number fields"
+    print >>sys.stderr," -M [columns]     Mark/highlight columns"
+
+        
+def bold(s):
+    CSI="\x1B["
+    return CSI+"1m" + s + CSI + "0m"
+
+def red(s):
+    CSI="\x1B["
+    return CSI+"31m" + s + CSI + "0m"  
 
 def parsecolumns(settings, fieldcount):
     assert fieldcount > 0
@@ -47,7 +57,7 @@ def parsecolumns(settings, fieldcount):
 
 if __name__ == "__main__":
     try:
-	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SH:TC:nN")
+	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SH:TC:nNM:")
     except getopt.GetoptError, err:
 	    # print help information and exit:
 	    print str(err)
@@ -71,6 +81,8 @@ if __name__ == "__main__":
     commentchar = None
     numberfields = False
     numberlines = False
+    highlightsettings = ""
+    highlight = []
     
     
     for o, a in opts:
@@ -102,7 +114,9 @@ if __name__ == "__main__":
         elif o == '-n':
             numberlines = True
         elif o == '-N':
-            numberfields = True            
+            numberfields = True        
+        elif o == '-M':    
+            highlightsettings = a
         else:
             raise Exception("invalid option: " + o)
                     
@@ -127,6 +141,7 @@ if __name__ == "__main__":
     if keepsettings: keep = parsecolumns(keepsettings, fieldcount)
     if deletesettings: delete = parsecolumns(deletesettings, fieldcount)
     if histsettings: hist = parsecolumns(histsettings, fieldcount)
+    if highlightsettings: highlight = parsecolumns(highlightsettings, fieldcount)
        
     
     if keep: 
@@ -231,11 +246,14 @@ if __name__ == "__main__":
                 action = 'keep'
             elif i in delete:
                 action = 'delete'
+            if i in highlight:
+                field = bold(red(field))                
             if numberfields:
                 field = str(i) + '=' + field                
             if action == 'keep':
                 newfields.append(field)
         s = delimiter.join(newfields)
+        
         
         if outputfile:                       
            if numberlines: f_out.write("@" + str(rowcount_in) + delimiter)
