@@ -16,7 +16,7 @@ def usage():
     print >>sys.stderr," -T               Set tab as delimiter"
     print >>sys.stderr," -o [outputfile]  Output to file instead of stdout"
     print >>sys.stderr," -i               Outputfile equals inputfile"
-    print >>sys.stderr," -s [expression]  Select rows, expression is may use variables $1...$n for the columns, and operators and,or,not,>,<,!=,== (python syntax)"
+    print >>sys.stderr," -s [expression]  Select rows, expression is may use variables #1...#n for the columns, and operators and,or,not,>,<,!=,== (python syntax)."
     print >>sys.stderr," -S               Compute statistics"
     print >>sys.stderr," -H [column]      Compute histogram on the specified column"
     print >>sys.stderr," -C [char]        Ignore comments, line starting with the specified character. Example: -C #"
@@ -175,9 +175,9 @@ if __name__ == "__main__":
                 except:                    
                     isdigit = False
                 if isdigit:
-                    currentselect = currentselect.replace('$' + str(i), fields[i-1])
+                    currentselect = currentselect.replace('#' + str(i), fields[i-1])
                 else:
-                    currentselect = currentselect.replace('$' + str(i), '"' + fields[i-1].replace('"',"\\\"") + '"')
+                    currentselect = currentselect.replace('#' + str(i), '"' + fields[i-1].replace('"',"\\\"") + '"')
             if not eval(currentselect):
                 continue
     
