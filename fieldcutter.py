@@ -5,6 +5,7 @@ import sys
 import codecs
 import getopt
 import os
+import math 
 
 def usage():
     print >>sys.stderr,"Usage: fieldcutter.py -f filename"
@@ -32,6 +33,17 @@ def bold(s):
 def red(s):
     CSI="\x1B["
     return CSI+"31m" + s + CSI + "0m"  
+
+def entropy(d, base = 2):
+      """Compute the entropy of the distribution"""
+      entropy = 0
+      for type in d:
+         if not base:
+             entropy += d[type] * -math.log(d[type])     
+         else:
+             entropy += d[type] * -math.log(d[type], base)     
+      return entropy
+
 
 def parsecolumns(settings, fieldcount):
     assert fieldcount > 0
@@ -276,8 +288,9 @@ if __name__ == "__main__":
     
     if hist:        
         for fieldnum in sorted(freq):
-            print >>sys.stderr, "Histogram for column #" + str(fieldnum+1)
-            print >>sys.stderr,"------------------------------------------"
+            tokens = sum(freq[fieldnum].values())
+            print >>sys.stderr, "Histogram for column #" + str(fieldnum+1) + "\ttypes=" + str(len(freq[fieldnum])) + "\ttokens=" + str(tokens) + "\tttr=" +  str(len(freq[fieldnum]) / float(tokens)) + "\tentropy=" + str(entropy(freq[fieldnum]) )
+            print >>sys.stderr,"------------------------------------------------------------------------"
             s = float(sum(freq[fieldnum].values()))
             for i, (word, count) in enumerate(sorted(freq[fieldnum].items(), key=lambda x: x[1] * -1)):
                 print >>sys.stderr, str(i) + ")\t" + word.encode(encoding) + "\t" + str(count) + "\t" + str(count / s * 100) + '%' 
