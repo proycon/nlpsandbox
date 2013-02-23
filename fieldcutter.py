@@ -26,7 +26,7 @@ def usage():
 
 if __name__ == "__main__":
     try:
-	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SHTC:nN")
+	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SH:TC:nN")
     except getopt.GetoptError, err:
 	    # print help information and exit:
 	    print str(err)
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     overwriteinput = False
     outputfile = None
     DOSTATS = False
-    DOHIST = False
+    DOHIST = None
     select = None
     fieldcount = 0
     commentchar = None
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         elif o == '-S':
             DOSTATS = True
         elif o == '-H':
-            DOHIST = True            
+            DOHIST = int(a)
         elif o == '-T':
             delimiter = "\t"
         elif o == '-C':
@@ -99,6 +99,8 @@ if __name__ == "__main__":
             print >>sys.stderr,"Number of fields: ", fieldcount
             break
     f.close()
+    
+    if DOHIST < 0: DOHIST = fieldcount + DOHIST + 1
     
     if keepsettings:
         for x in keepsettings.split(','):
@@ -183,17 +185,14 @@ if __name__ == "__main__":
     
         rowcount_out += 1
         
+
+        if DOHIST:
+            if not fields[DOHIST - 1] in freq:
+                freq[fields[DOHIST -1]] = 0
+            freq[fields[DOHIST -1]] += 1
             
-        if DOSTATS:
-            
-            for i, field in enumerate(fields):
-                if not i in freq:
-                    freq[i] = {}
-                    if not field in freq[i]:
-                        freq[i][field] = 0
-                    freq[i][field] += 1
-                    
-                    
+        if DOSTATS:                    
+            for i,field in enumerate(fields):
                 if not i in nostats: 
                     if '.' in field:
                         try:
