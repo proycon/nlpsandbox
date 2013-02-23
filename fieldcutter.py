@@ -43,7 +43,7 @@ if __name__ == "__main__":
     overwriteinput = False
     outputfile = None
     DOSTATS = False
-    DOHIST = None
+    DOHIST = 0
     select = None
     fieldcount = 0
     commentchar = None
