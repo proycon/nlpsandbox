@@ -51,6 +51,7 @@ if __name__ == "__main__":
             for line in f:
                 if line[0] != '#':                    
                     fieldcount = len(line.strip().split(delimiter))
+                    print >>sys.stderr,"Number of fields: ", fieldcount
                     break
             f.close()
         elif o == "-k":	
