@@ -110,6 +110,10 @@ if __name__ == "__main__":
     nostats = set()
     freq = {}
     
+    if keep:
+        print >>sys.stderr, "Fields to keep: ",  " ".join([ str(x) for x in keep])
+    if delete:
+        print >>sys.stderr, "Fields to delete: ",  " ".join([ str(x) for x in delete])
     
     rowcount = 0
     f = codecs.open(filename,'r',encoding)
@@ -178,6 +182,8 @@ if __name__ == "__main__":
         else:
            print s.encode(encoding)
         
+    print >>sys.stderr,"Outputted " + str(rowcount) + " lines"
+    
     if outputfile:
         f_out.close()
         
