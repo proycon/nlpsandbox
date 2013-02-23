@@ -207,7 +207,7 @@ if __name__ == "__main__":
             elif i in delete:
                 action = 'delete'
             if numberfields:
-                fields = str(i) + ':' + field                
+                field = str(i) + ':' + field                
             if action == 'keep':
                 newfields.append(field)
         s = delimiter.join(newfields)
