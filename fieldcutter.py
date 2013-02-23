@@ -41,26 +41,39 @@ if __name__ == "__main__":
     DOSTATS = False
     DOHIST = False
     select = None
+    fieldcount = 0
     for o, a in opts:
         if o == "-e":	
             encoding = a
         elif o == "-f":	
             filename = a              
+            f = codecs.open(filename,'r',encoding)
+            for line in f:
+                if line[0] != '#':                    
+                    fieldcount = len(line.strip().split(delimiter))
+                    break
+            f.close()
         elif o == "-k":	
             for x in a.split(','):
                 if ':' in x:
                     low,high = x.split(':')
+                    if low < 0: low = fieldcount + int(low) + 1
+                    if high < 0: high = fieldcount + int(high) + 1
                     for i in range(int(low), int(high) + 1):
                         keep.append(i)
                 else:
+                    if int(x) < 0: x = fieldcount + int(x) + 1
                     keep.append(int(x))
         elif o == "-d":	
             for x in a.split(','):
                 if ':' in x:
                     low,high = x.split(':')
+                    if low < 0: low = fieldcount + int(low) + 1
+                    if high < 0: high = fieldcount + int(high) + 1
                     for i in range(int(low), int(high) + 1):
                         delete.append(i)
                 else:
+                    if int(x) < 0: x = fieldcount + int(x) + 1
                     delete.append(int(x))       
         elif o == '-D':
             delimiter = a
@@ -149,13 +162,13 @@ if __name__ == "__main__":
             
         
         newfields = []
-        k = [ x - 1 if x >= 0 else len(fields) + x for x in keep ]
-        d = [ x - 1 if x >= 0 else len(fields) + x for x in delete ]
+        #k = [ x - 1 if x >= 0 else len(fields) + x for x in keep ]
+        #d = [ x - 1 if x >= 0 else len(fields) + x for x in delete ]
         for i, field in enumerate(fields):
             action = default 
-            if i in k:
+            if i in keep:
                 action = 'keep'
-            elif i in d:
+            elif i in delete:
                 action = 'delete'
             if action == 'keep':
                 newfields.append(field)
