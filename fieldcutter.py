@@ -141,7 +141,7 @@ if __name__ == "__main__":
     rowcount = 0
     f = codecs.open(filename,'r',encoding)
     for line in f:
-        if line.strip() or (commentchar and line[:len(commentchar)] == commentchar):
+        if not line.strip() or (commentchar and line[:len(commentchar)] == commentchar):
             if outputfile:                       
                 f_out.write(line.strip() + "\n")
             else:
