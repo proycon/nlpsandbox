@@ -33,6 +33,8 @@ if __name__ == "__main__":
     
     filename = ""
     encoding = "utf-8"
+    keepsettings = ""
+    deletesettings = ""
     delete = []
     keep = []
     delimiter = " "
@@ -42,6 +44,8 @@ if __name__ == "__main__":
     DOHIST = False
     select = None
     fieldcount = 0
+    
+    
     for o, a in opts:
         if o == "-e":	
             encoding = a
@@ -55,27 +59,9 @@ if __name__ == "__main__":
                     break
             f.close()
         elif o == "-k":	
-            for x in a.split(','):
-                if ':' in x:
-                    low,high = x.split(':')
-                    if low < 0: low = fieldcount + int(low) + 1
-                    if high < 0: high = fieldcount + int(high) + 1
-                    for i in range(int(low), int(high) + 1):
-                        keep.append(i)
-                else:
-                    if int(x) < 0: x = fieldcount + int(x) + 1
-                    keep.append(int(x))
+            keepsettings = a
         elif o == "-d":	
-            for x in a.split(','):
-                if ':' in x:
-                    low,high = x.split(':')
-                    if low < 0: low = fieldcount + int(low) + 1
-                    if high < 0: high = fieldcount + int(high) + 1
-                    for i in range(int(low), int(high) + 1):
-                        delete.append(i)
-                else:
-                    if int(x) < 0: x = fieldcount + int(x) + 1
-                    delete.append(int(x))       
+            deletesettings = a      
         elif o == '-D':
             delimiter = a
         elif o == '-o':    
@@ -97,6 +83,30 @@ if __name__ == "__main__":
     if not filename:    
         usage()
         sys.exit(2)
+    
+    if keepsettings:
+        for x in keepsettings.split(','):
+            if ':' in x:
+                low,high = x.split(':')
+                if low < 0: low = fieldcount + int(low) + 1
+                if high < 0: high = fieldcount + int(high) + 1
+                for i in range(int(low), int(high) + 1):
+                    keep.append(i)
+            else:
+                if int(x) < 0: x = fieldcount + int(x) + 1
+                keep.append(int(x))
+    
+    if deletesettings:
+        for x in deletesettings.split(','):
+            if ':' in x:
+                low,high = x.split(':')
+                if low < 0: low = fieldcount + int(low) + 1
+                if high < 0: high = fieldcount + int(high) + 1
+                for i in range(int(low), int(high) + 1):
+                    delete.append(i)
+            else:
+                if int(x) < 0: x = fieldcount + int(x) + 1
+                delete.append(int(x))         
     
     if keep: 
         default = 'delete'
