@@ -138,20 +138,27 @@ if __name__ == "__main__":
     if delete:
         print >>sys.stderr, "Fields to delete: ",  " ".join([ str(x) for x in delete])
     
-    rowcount = 0
+    rowcount_in = 0
+    rowcount_out = 0
     f = codecs.open(filename,'r',encoding)
     for line in f:
+        rowcount_in += 1
+        
+        
         if not line.strip() or (commentchar and line[:len(commentchar)] == commentchar):
+            rowcount_out += 1
             if outputfile:                       
                 f_out.write(line.strip() + "\n")
             else:
                 print line.strip().encode(encoding)
             continue
         
+        
+
             
         fields = line.strip().split(delimiter)
         if len(fields) != fieldcount:
-            print >>sys.stderr, "Number of columns in line " + str(rowcount) + " deviates, expected " + str(fieldcount) + ", got " + str(len(fields)) 
+            print >>sys.stderr, "Number of columns in line " + str(rowcount_in) + " deviates, expected " + str(fieldcount) + ", got " + str(len(fields)) 
             sys.exit(5)
         
         
@@ -166,7 +173,7 @@ if __name__ == "__main__":
             if not eval(currentselect):
                 continue
     
-        rowcount += 1
+        rowcount_out += 1
         
             
         if DOSTATS:
@@ -217,13 +224,13 @@ if __name__ == "__main__":
         s = delimiter.join(newfields)
         
         if outputfile:                       
-           if numberfields: f_out.write("@" + str(rowcount) + delimiter)
+           if numberfields: f_out.write("@" + str(rowcount_out) + delimiter)
            f_out.write(s + "\n")
         else:
-           if numberfields: print "@" + str(rowcount) + delimiter,
+           if numberfields: print "@" + str(rowcount_out) + delimiter,
            print s.encode(encoding)
         
-    print >>sys.stderr,"Outputted " + str(rowcount) + " lines"
+    print >>sys.stderr,"Read " + str(rowcount_in) + " lines, outputted " + str(rowcount_out)
     
     if outputfile:
         f_out.close()
@@ -233,7 +240,7 @@ if __name__ == "__main__":
         
     if DOSTATS:
         for i in sorted(sumdata):
-            print >>sys.stderr, "column #" + str(i) + " sum="+ str(sumdata[i]) + "\taverage=" + str(sumdata[i] / float(rowcount))
+            print >>sys.stderr, "column #" + str(i) + " sum="+ str(sumdata[i]) + "\taverage=" + str(sumdata[i] / float(rowcount_out))
     
     if DOHIST:        
         for i, (word, count) in enumerate(sorted(freq, key=lambda x: x[1] * -1)):
