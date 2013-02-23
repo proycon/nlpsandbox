@@ -59,7 +59,8 @@ if __name__ == "__main__":
             raise Exception("invalid option: " + o)
                     
     if not filename:    
-        print usage
+        usage()
+        sys.exit(2)
     
     if keep: 
         default = 'delete'
