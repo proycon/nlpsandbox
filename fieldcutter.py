@@ -250,6 +250,7 @@ if __name__ == "__main__":
             print >>sys.stderr, "column #" + str(i) + " sum="+ str(sumdata[i]) + "\taverage=" + str(sumdata[i] / float(rowcount_out))
     
     if DOHIST:        
+        s = float(sum(freq.values()))
         for i, (word, count) in enumerate(sorted(freq.items(), key=lambda x: x[1] * -1)):
-            print >>sys.stderr, str(i) + ")\t" + word.encode(encoding) + "\t" + str(count)
+            print >>sys.stderr, str(i) + ")\t" + word.encode(encoding) + "\t" + str(count) + "\t" + str(count / s * 100) + '%' 
             
