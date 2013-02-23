@@ -24,23 +24,24 @@ def usage():
     print >>sys.stderr," -N               Number fields"
 
 def parsecolumns(settings, fieldcount):
+    assert fieldcount > 0
     l = []
     for x in settings.split(','):
-            if ':' in x:
-                low,high = [ int(y) for y in x.split(':') ]                
-                if low < 0: low = fieldcount + low + 1
-                if high < 0: high = fieldcount + high + 1
-                for i in range(low, high + 1):
-                    if i > fieldcount:  
-                        print >>sys.stderr, "ERROR: Specified column " + str(i) + " is out of range"
-                        sys.exit(4)
-                    l.append(i)
-            else:
-                if int(x) < 0: x = fieldcount + x + 1
-                if x > fieldcount:  
-                        print >>sys.stderr, "ERROR: Specified column " + str(x) + " is out of range"
-                        sys.exit(4)
-                l.append(x)
+        if ':' in x:
+            low,high = [ int(y) for y in x.split(':') ]                
+            if low < 0: low = fieldcount + low + 1
+            if high < 0: high = fieldcount + high + 1
+            for i in range(low, high + 1):
+                if i > fieldcount:  
+                    print >>sys.stderr, "ERROR: Specified column " + str(i) + " is out of range"
+                    sys.exit(4)
+                l.append(i)
+        else:
+            if int(x) < 0: x = fieldcount + x + 1
+            if x > fieldcount:  
+                    print >>sys.stderr, "ERROR: Specified column " + str(x) + " is out of range"
+                    sys.exit(4)
+            l.append(x)
     return l
 
 if __name__ == "__main__":
@@ -122,9 +123,9 @@ if __name__ == "__main__":
     
     
     
-    if keepsettings: keep = parsecolumns(keepsettings,fieldcount)
-    if deletesettings: delete = parsecolumns(deletesettings,fieldcount)
-    if histsettings: hist = parsecolumns(histsettings,fieldcount)
+    if keepsettings: keep = parsecolumns(keepsettings, fieldcount)
+    if deletesettings: delete = parsecolumns(deletesettings, fieldcount)
+    if histsettings: hist = parsecolumns(histsettings, fieldcount)
        
     
     if keep: 
