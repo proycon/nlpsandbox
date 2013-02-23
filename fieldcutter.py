@@ -19,12 +19,12 @@ def usage():
     print >>sys.stderr," -s [expression]  Select rows, expression is may use variables $1...$n for the columns, and operators and,or,not,>,<,!=,== (python syntax)"
     print >>sys.stderr," -S               Compute statistics"
     print >>sys.stderr," -H [column]      Compute histogram on the specified column"
-    
+    print >>sys.stderr," -C [char]        Ignore comments, line starting with the specified character. Example: -C #"
 
 
 if __name__ == "__main__":
     try:
-	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SHT")
+	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SHTC:")
     except getopt.GetoptError, err:
 	    # print help information and exit:
 	    print str(err)
@@ -44,6 +44,7 @@ if __name__ == "__main__":
     DOHIST = False
     select = None
     fieldcount = 0
+    commentchar = None
     
     
     for o, a in opts:
@@ -70,6 +71,8 @@ if __name__ == "__main__":
             DOHIST = True            
         elif o == '-T':
             delimiter = "\t"
+        elif o == '-C':
+            commentchar = a
         else:
             raise Exception("invalid option: " + o)
                     
@@ -83,7 +86,7 @@ if __name__ == "__main__":
     
     f = codecs.open(filename,'r',encoding)
     for line in f:
-        if line[0] != '#':                    
+        if not commentchar or line[:len(commentchar)] != commentchar:                    
             fieldcount = len(line.strip().split(delimiter))
             print >>sys.stderr,"Number of fields: ", fieldcount
             break
@@ -134,7 +137,16 @@ if __name__ == "__main__":
     rowcount = 0
     f = codecs.open(filename,'r',encoding)
     for line in f:
+        if commentchar and line[:len(commentchar)] == commentchar:
+            if outputfile:                       
+                f_out.write(line.strip() + "\n")
+            else:
+                print line.strip().encode(encoding)
+            continue
+    
         fields = line.strip().split(delimiter)
+        
+        
         
         if select:
             currentselect = select
