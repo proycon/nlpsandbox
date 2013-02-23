@@ -90,7 +90,7 @@ if __name__ == "__main__":
     
     f = codecs.open(filename,'r',encoding)
     for line in f:
-        if not commentchar or line[:len(commentchar)] != commentchar:                    
+        if not line.strip() and (not commentchar or line[:len(commentchar)] != commentchar):                    
             fieldcount = len(line.strip().split(delimiter))
             print >>sys.stderr,"Number of fields: ", fieldcount
             break
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     rowcount = 0
     f = codecs.open(filename,'r',encoding)
     for line in f:
-        if commentchar and line[:len(commentchar)] == commentchar:
+        if line.strip() or (commentchar and line[:len(commentchar)] == commentchar):
             if outputfile:                       
                 f_out.write(line.strip() + "\n")
             else:
