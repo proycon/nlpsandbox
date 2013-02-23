@@ -107,9 +107,9 @@ if __name__ == "__main__":
             currentselect = select
             for i in reversed(range(1,len(fields)+1)):
                 if fields[i-1].isdigit():
-                    currentselect += currentselect.replace('$' + i, fields[i-1])
+                    currentselect += currentselect.replace('$' + str(i), fields[i-1])
                 else:
-                    currentselect += currentselect.replace('$' + i, '"' + fields[i-1].replace('"','\"') + '"')
+                    currentselect += currentselect.replace('$' + str(i), '"' + fields[i-1].replace('"','\"') + '"')
             if not eval(currentselect):
                 continue
         
