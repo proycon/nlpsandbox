@@ -7,7 +7,7 @@ import getopt
 import os
 
 def usage():
-    print >>sys.stderr,"Usage: fieldcutter.py -f filename -k [keep] -d [delete] -e [encoding] [-T|-C|-S] -o [outputfile] -v"
+    print >>sys.stderr,"Usage: fieldcutter.py -f filename"
     print >>sys.stderr,"Options:"
     print >>sys.stderr," -k [columns]     columns to keep (1-indexed), this is a comma separated list of column numbers, negative numbers are allowed for end-aligned-indices. All others will be deleted"
     print >>sys.stderr," -d [columns]     columns to delete (1-indexed), this is a comma separated list of column numbers, negative numbers are allowed for end-aligned-indices. All others will be kept"
