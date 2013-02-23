@@ -25,6 +25,7 @@ def usage():
 
 def parsecolumns(settings, fieldcount):
     assert fieldcount > 0
+    print >>sys.stderr, "DEBUG=",fieldcount
     l = []
     for x in settings.split(','):
         if ':' in x:
@@ -37,11 +38,11 @@ def parsecolumns(settings, fieldcount):
                     sys.exit(4)
                 l.append(i)
         else:
-            if int(x) < 0: x = fieldcount + x + 1
-            if x > fieldcount:  
+            if int(x) < 0: x = fieldcount + int(x) + 1
+            if int(x) > fieldcount:  
                 print >>sys.stderr, "ERROR: Specified column " + str(x) + " is out of range"
                 sys.exit(4)
-            l.append(x)
+            l.append(int(x))
     return l
 
 if __name__ == "__main__":
