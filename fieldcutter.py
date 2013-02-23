@@ -39,8 +39,8 @@ def parsecolumns(settings, fieldcount):
         else:
             if int(x) < 0: x = fieldcount + x + 1
             if x > fieldcount:  
-                    print >>sys.stderr, "ERROR: Specified column " + str(x) + " is out of range"
-                    sys.exit(4)
+                print >>sys.stderr, "ERROR: Specified column " + str(x) + " is out of range"
+                sys.exit(4)
             l.append(x)
     return l
 
