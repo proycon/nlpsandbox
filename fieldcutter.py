@@ -206,10 +206,10 @@ if __name__ == "__main__":
                 action = 'keep'
             elif i in delete:
                 action = 'delete'
+            if numberfields:
+                fields = str(i) + ':' + field                
             if action == 'keep':
                 newfields.append(field)
-            if numberfields:
-                fields = str(i) + ':' + field
         s = delimiter.join(newfields)
         
         if outputfile:                       
