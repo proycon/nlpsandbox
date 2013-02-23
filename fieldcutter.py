@@ -232,10 +232,10 @@ if __name__ == "__main__":
         s = delimiter.join(newfields)
         
         if outputfile:                       
-           if numberlines: f_out.write("@" + str(rowcount_out) + delimiter)
+           if numberlines: f_out.write("@" + str(rowcount_in) + delimiter)
            f_out.write(s + "\n")
         else:
-           if numberlines: print "@" + str(rowcount_out) + delimiter,
+           if numberlines: print "@" + str(rowcount_in) + delimiter,
            print s.encode(encoding)
         
     print >>sys.stderr,"Read " + str(rowcount_in) + " lines, outputted " + str(rowcount_out)
