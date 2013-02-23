@@ -20,12 +20,13 @@ def usage():
     print >>sys.stderr," -S               Compute statistics"
     print >>sys.stderr," -H [column]      Compute histogram on the specified column"
     print >>sys.stderr," -C [char]        Ignore comments, line starting with the specified character. Example: -C #"
-    print >>sys.stderr," -n               Number lines and fields"
+    print >>sys.stderr," -n               Number lines"
+    print >>sys.stderr," -N               Number fields"
 
 
 if __name__ == "__main__":
     try:
-	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SHTC:n")
+	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SHTC:nN")
     except getopt.GetoptError, err:
 	    # print help information and exit:
 	    print str(err)
@@ -47,6 +48,7 @@ if __name__ == "__main__":
     fieldcount = 0
     commentchar = None
     numberfields = False
+    numberlines = False
     
     
     for o, a in opts:
@@ -76,7 +78,9 @@ if __name__ == "__main__":
         elif o == '-C':
             commentchar = a
         elif o == '-n':
-            numberfields = True
+            numberlines = True
+        elif o == '-N':
+            numberfields = True            
         else:
             raise Exception("invalid option: " + o)
                     
@@ -224,10 +228,10 @@ if __name__ == "__main__":
         s = delimiter.join(newfields)
         
         if outputfile:                       
-           if numberfields: f_out.write("@" + str(rowcount_out) + delimiter)
+           if numberlines: f_out.write("@" + str(rowcount_out) + delimiter)
            f_out.write(s + "\n")
         else:
-           if numberfields: print "@" + str(rowcount_out) + delimiter,
+           if numberlines: print "@" + str(rowcount_out) + delimiter,
            print s.encode(encoding)
         
     print >>sys.stderr,"Read " + str(rowcount_in) + " lines, outputted " + str(rowcount_out)
