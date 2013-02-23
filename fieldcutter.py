@@ -146,10 +146,10 @@ if __name__ == "__main__":
             
         
         newfields = []
+        k = [ x - 1 if x >= 0 else len(fields) + x for x in keep ]
+        d = [ x - 1 if x >= 0 else len(fields) + x for x in delete ]
         for i, field in enumerate(fields):
             action = default 
-            k = [ x - 1 if x >= 0 else len(fields) + x for x in keep ]
-            d = [ x - 1 if x >= 0 else len(fields) + x for x in delete ]
             if i in k:
                 action = 'keep'
             elif i in d:
