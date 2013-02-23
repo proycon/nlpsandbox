@@ -20,11 +20,12 @@ def usage():
     print >>sys.stderr," -S               Compute statistics"
     print >>sys.stderr," -H [column]      Compute histogram on the specified column"
     print >>sys.stderr," -C [char]        Ignore comments, line starting with the specified character. Example: -C #"
+    print >>sys.stderr," -n               Number lines and fields"
 
 
 if __name__ == "__main__":
     try:
-	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SHTC:")
+	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SHTC:n")
     except getopt.GetoptError, err:
 	    # print help information and exit:
 	    print str(err)
@@ -45,6 +46,7 @@ if __name__ == "__main__":
     select = None
     fieldcount = 0
     commentchar = None
+    numberfields = False
     
     
     for o, a in opts:
@@ -73,6 +75,8 @@ if __name__ == "__main__":
             delimiter = "\t"
         elif o == '-C':
             commentchar = a
+        elif o == '-n':
+            numberfields = True
         else:
             raise Exception("invalid option: " + o)
                     
@@ -204,10 +208,15 @@ if __name__ == "__main__":
                 action = 'delete'
             if action == 'keep':
                 newfields.append(field)
+            if numberfields:
+                fields = str(i) + ':' + field
         s = delimiter.join(newfields)
+        
         if outputfile:                       
+           if numberfields: f_out.write("@" + str(rowcount) + delimiter)
            f_out.write(s + "\n")
         else:
+           if numberfields: print "@" + str(rowcount) + delimiter,
            print s.encode(encoding)
         
     print >>sys.stderr,"Outputted " + str(rowcount) + " lines"
