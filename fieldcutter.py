@@ -13,6 +13,7 @@ def usage():
     print >>sys.stderr," -d [columns]     columns to delete (1-indexed), this is a comma separated list of column numbers, negative numbers are allowed for end-aligned-indices. All others will be kept"
     print >>sys.stderr," -e [encoding]    Encoding of the input file, defaults to utf-8"
     print >>sys.stderr," -D [delimiter]   Field delimiter (space by default)"
+    print >>sys.stderr," -T               Set tab as delimiter"
     print >>sys.stderr," -o [outputfile]  Output to file instead of stdout"
     print >>sys.stderr," -i               Outputfile equals inputfile"
     print >>sys.stderr," -s [expression]  Select rows, expression is may use variables $1...$n for the columns, and operators and,or,not,>,<,!=,== (python syntax)"
@@ -23,7 +24,7 @@ def usage():
 
 if __name__ == "__main__":
     try:
-	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SH")
+	    opts, args = getopt.getopt(sys.argv[1:], "f:k:d:e:D:o:is:SHT")
     except getopt.GetoptError, err:
 	    # print help information and exit:
 	    print str(err)
@@ -74,6 +75,8 @@ if __name__ == "__main__":
             DOSTATS = True
         elif o == '-H':
             DOHIST = True            
+        elif o == '-T':
+            delimiter = "\t"
         else:
             raise Exception("invalid option: " + o)
                     
