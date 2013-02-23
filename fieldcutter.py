@@ -18,11 +18,30 @@ def usage():
     print >>sys.stderr," -i               Outputfile equals inputfile"
     print >>sys.stderr," -s [expression]  Select rows, expression is may use variables #1...#n for the columns, and operators and,or,not,>,<,!=,== (python syntax)."
     print >>sys.stderr," -S               Compute statistics"
-    print >>sys.stderr," -H [column]      Compute histogram on the specified column"
+    print >>sys.stderr," -H [columns]     Compute histogram on the specified columns"
     print >>sys.stderr," -C [char]        Ignore comments, line starting with the specified character. Example: -C #"
     print >>sys.stderr," -n               Number lines"
     print >>sys.stderr," -N               Number fields"
 
+def parsecolumns(settings, fieldcount):
+    l = []
+    for x in settings.split(','):
+            if ':' in x:
+                low,high = [ int(y) for y in x.split(':') ]                
+                if low < 0: low = fieldcount + low + 1
+                if high < 0: high = fieldcount + high + 1
+                for i in range(low, high + 1):
+                    if i > fieldcount:  
+                        print >>sys.stderr, "ERROR: Specified column " + str(i) + " is out of range"
+                        sys.exit(4)
+                    l.append(i)
+            else:
+                if int(x) < 0: x = fieldcount + x + 1
+                if x > fieldcount:  
+                        print >>sys.stderr, "ERROR: Specified column " + str(x) + " is out of range"
+                        sys.exit(4)
+                l.append(x)
+    return l
 
 if __name__ == "__main__":
     try:
@@ -37,13 +56,14 @@ if __name__ == "__main__":
     encoding = "utf-8"
     keepsettings = ""
     deletesettings = ""
+    histsettings = ""
     delete = []
     keep = []
     delimiter = " "
     overwriteinput = False
     outputfile = None
     DOSTATS = False
-    DOHIST = 0
+    hist = []
     select = None
     fieldcount = 0
     commentchar = None
@@ -72,7 +92,7 @@ if __name__ == "__main__":
         elif o == '-S':
             DOSTATS = True
         elif o == '-H':
-            DOHIST = int(a)
+            histsettings = a 
         elif o == '-T':
             delimiter = "\t"
         elif o == '-C':
@@ -100,31 +120,12 @@ if __name__ == "__main__":
             break
     f.close()
     
-    if DOHIST < 0: DOHIST = fieldcount + DOHIST + 1
     
-    if keepsettings:
-        for x in keepsettings.split(','):
-            if ':' in x:
-                low,high = [ int(y) for y in x.split(':') ]                
-                if low < 0: low = fieldcount + low + 1
-                if high < 0: high = fieldcount + high + 1
-                for i in range(low, high + 1):
-                    keep.append(i)
-            else:
-                if int(x) < 0: x = fieldcount + x + 1
-                keep.append(x)
     
-    if deletesettings:
-        for x in deletesettings.split(','):
-            if ':' in x:
-                low,high = [ int(y) for y in x.split(':') ]                
-                if low < 0: low = fieldcount + low + 1
-                if high < 0: high = fieldcount + high + 1
-                for i in range(low, high + 1):
-                    delete.append(i)
-            else:
-                if int(x) < 0: x = fieldcount + x + 1
-                delete.append(x)       
+    if keepsettings: keep = parsecolumns(keepsettings,fieldcount)
+    if deletesettings: delete = parsecolumns(deletesettings,fieldcount)
+    if histsettings: hist = parsecolumns(histsettings,fieldcount)
+       
     
     if keep: 
         default = 'delete'
@@ -186,10 +187,14 @@ if __name__ == "__main__":
         rowcount_out += 1
         
 
-        if DOHIST:
-            if not fields[DOHIST - 1] in freq:
-                freq[fields[DOHIST -1]] = 0
-            freq[fields[DOHIST -1]] += 1
+        if hist:
+            for fieldnum in hist:
+                fieldnum = fieldnum - 1
+                if not fieldnum in freq:                
+                    freq[fieldnum] = {}
+                if not fields[fieldnum] in freq:
+                    freq[fieldnum][fields[fieldnum]] = 0
+                freq[fieldnum][fields[fieldnum]] += 1
             
         if DOSTATS:                    
             for i,field in enumerate(fields):
@@ -249,8 +254,11 @@ if __name__ == "__main__":
         for i in sorted(sumdata):
             print >>sys.stderr, "column #" + str(i) + " sum="+ str(sumdata[i]) + "\taverage=" + str(sumdata[i] / float(rowcount_out))
     
-    if DOHIST:        
-        s = float(sum(freq.values()))
-        for i, (word, count) in enumerate(sorted(freq.items(), key=lambda x: x[1] * -1)):
-            print >>sys.stderr, str(i) + ")\t" + word.encode(encoding) + "\t" + str(count) + "\t" + str(count / s * 100) + '%' 
+    if hist:        
+        for fieldnum in sorted(hist):
+            print >>sys.stderr, "Histogram for column #" + str(fieldnum+1)
+            print >>sys.stderr,"------------------------------------------"
+            s = float(sum(freq[fieldnum].values()))
+            for i, (word, count) in enumerate(sorted(freq[fieldnum].items(), key=lambda x: x[1] * -1)):
+                print >>sys.stderr, str(i) + ")\t" + word.encode(encoding) + "\t" + str(count) + "\t" + str(count / s * 100) + '%' 
             
