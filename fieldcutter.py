@@ -275,7 +275,7 @@ if __name__ == "__main__":
             print >>sys.stderr, "column #" + str(i) + " sum="+ str(sumdata[i]) + "\taverage=" + str(sumdata[i] / float(rowcount_out))
     
     if hist:        
-        for fieldnum in sorted(hist):
+        for fieldnum in sorted(freq):
             print >>sys.stderr, "Histogram for column #" + str(fieldnum+1)
             print >>sys.stderr,"------------------------------------------"
             s = float(sum(freq[fieldnum].values()))
