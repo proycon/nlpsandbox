@@ -179,8 +179,8 @@ if __name__ == "__main__":
                 else:
                     currentselect = currentselect.replace('$' + str(i), '"' + fields[i-1].replace('"','\"') + '"')
             print >>sys.stderr,"DEBUG=["+ currentselect+"]"
-            #if not eval(currentselect):
-            #    continue
+            if not eval(currentselect):
+                continue
     
         rowcount_out += 1
         
