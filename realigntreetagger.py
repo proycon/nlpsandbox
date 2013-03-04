@@ -26,29 +26,67 @@ for line in ref:
             except StopIteration:
                 break
             word,pos,lemma = bufline.strip().split('\t')
-            buffer.append( word,pos,lemma)
+            buffer.append( word,lemma,pos)
         
     cursor = 0
     postags = []
     lemmas = []    
-    for word in words:
+    
+    alignment = {}
+    for i, word in enumerate(words):
         found = False
-        for i, (bufword,pos,lemma) in enumerate(buffer[cursor:]):
+        for j, (bufword,lemma,pos) in enumerate(buffer[cursor:]):
             if word == bufword:
                 found = True
-                cursor = i+1
-                postags.append(pos)
-                lemmas.append(lemma)
-                break
-        if not found:            
-            postags.append('?')
-            lemmas.append(word)
+                if not i in alignment:
+                    alignment[i] = []
+                alignment[i].append(j)
+
+    #resolve multiple alignments to the one closest to neighbours
+    for source, targets in alignment.items():
+        if len(targets) >= 1:
+            mindistance = 999
+            best = -1
+            newtargets = []
+            for target in targets:
+                if source-1 in alignment and len(alignment[source-1]) == 1:
+                    distance = target - alignment[source-1][0]
+                    if distance > 0: #only if order is right
+                        if distance < mindistance:
+                            best = target
+                            mindistance = distance                        
+                if source+1 in alignment and len(alignment[source+1]) == 1:
+                    distance = alignment[source+1][0] - target
+                    if distance > 0: #only if order is right
+                        if distance < mindistance:
+                            best = target
+                            mindistance = distance                    
             
-    buffer = buffer[cursor:]            
-                
-             
+            if best != -1:
+                alignment[source] = best
+            else:
+                alignment[source] = min(targets)                
+    
+    cutoff = max(alignment[x][0] for x in alignment) + 1
+    buffer = buffer[cutoff:]  
             
+    if not alignment:
+        print >>sys.stderr, "No alignments found!"
+        print >>sys.stderr, "Input:", repr(words)
+        print >>sys.stderr, "Buffer:", repr(buffer)
         
+            
+    for i, word in enumerate(words):
+        if i != 0: print " ",
+        if i in alignment:
+            s = word + "|" + buffer[alignment[i][0]][1] + "|" +  buffer[alignment[i][0]][2]
+        else:
+            s = word + "|" + word + "|?"
+        print s.encode('utf-8'),
+    print
+
+    
+
         
         
             
