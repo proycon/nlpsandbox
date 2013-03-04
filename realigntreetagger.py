@@ -26,7 +26,7 @@ for line in ref:
             except StopIteration:
                 break
             word,pos,lemma = bufline.strip().split('\t')
-            buffer.append( word,lemma,pos)
+            buffer.append( (word,lemma,pos) )
         
     cursor = 0
     postags = []
