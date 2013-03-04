@@ -63,19 +63,18 @@ for line in ref:
                             mindistance = distance                    
             
             if best != -1:
-                alignment[source] = best
+                alignment[source] = [best]
             else:
-                alignment[source] = min(targets)                
+                alignment[source] = [min(targets)]
     
-    cutoff = max(alignment[x][0] for x in alignment) + 1
-    buffer = buffer[cutoff:]  
             
     if not alignment:
         print >>sys.stderr, "No alignments found!"
         print >>sys.stderr, "Input:", repr(words)
         print >>sys.stderr, "Buffer:", repr(buffer)
         
-            
+    print >>sys.stderr, alignment          
+ 
     for i, word in enumerate(words):
         if i != 0: print " ",
         if i in alignment:
@@ -85,7 +84,10 @@ for line in ref:
         print s.encode('utf-8'),
     print
 
-    
+   
+ 
+    cutoff = max(alignment[x][0] for x in alignment) + 1
+    buffer = buffer[cutoff:]  
 
         
         
