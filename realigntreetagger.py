@@ -73,7 +73,6 @@ for line in ref:
         print >>sys.stderr, "Input:", repr(words)
         print >>sys.stderr, "Buffer:", repr(buffer)
         
-    print >>sys.stderr, alignment          
  
     for i, word in enumerate(words):
         if i != 0: print " ",
