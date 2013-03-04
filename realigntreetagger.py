@@ -28,6 +28,11 @@ for line in ref:
             except StopIteration:
                 break
             word,pos,lemma = bufline.strip().split('\t')
+            word = word.strip()
+            pos = pos.strip()
+            lemma = lemma.strip()
+            if '|' in pos: pos = pos.split('|')[0]
+            if '|' in lemma: lemma = lemma.split('|')[0]
             buffer.append( (word,lemma,pos) )
         
     cursor = 0
@@ -96,6 +101,11 @@ for line in ref:
             except StopIteration:
                 break
             word,pos,lemma = bufline.strip().split('\t')
+            word = word.strip()
+            pos = pos.strip()
+            lemma = lemma.strip()            
+            if '|' in pos: pos = pos.split('|')[0]
+            if '|' in lemma: lemma = lemma.split('|')[0]
             buffer.append( (word,lemma,pos) )        
 
 
