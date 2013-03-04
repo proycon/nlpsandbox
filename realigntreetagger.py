@@ -16,7 +16,9 @@ ttf = codecs.open(treetagfile,'r','utf-8')
 buffer = []
 
 ref = codecs.open(referencefile,'r','utf-8')
+linenum = 0
 for line in ref:
+    linenum += 1
     words = line.strip().split(' ')
     
     if len(buffer) < len(words) + 10:
@@ -69,11 +71,11 @@ for line in ref:
     
             
     if not alignment:
-        print >>sys.stderr, "No alignments found!"
+        print >>sys.stderr, "*********** Line " + str(linenum) + " -- No alignments found! *************"
         print >>sys.stderr, "Input:", repr(words)
         print >>sys.stderr, "Buffer:", repr(buffer)
-        
- 
+    
+         
     for i, word in enumerate(words):
         if i != 0: print " ",
         if i in alignment:
@@ -83,15 +85,20 @@ for line in ref:
         print s.encode('utf-8'),
     print
 
-   
- 
-    cutoff = max(alignment[x][0] for x in alignment) + 1
-    buffer = buffer[cutoff:]  
+    if alignment:
+        cutoff = max(alignment[x][0] for x in alignment) + 1
+        buffer = buffer[cutoff:]
+    elif not alignment:
+        #load extra in buffer:
+        for i in range(0,10):
+            try:
+                bufline = ttf.next()
+            except StopIteration:
+                break
+            word,pos,lemma = bufline.strip().split('\t')
+            buffer.append( (word,lemma,pos) )        
 
-        
-        
-            
-    
+
     
 ref.close()     
     
