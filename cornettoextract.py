@@ -18,8 +18,11 @@ for lu in c._c_lu_id2lu.values():
     lu_spec = c._lu_to_spec(lu)
     for result in c.get_related_lex_units(lu_spec,"1"):
         for lu_specsource in result:
+            print >>sys.stderr, "Processing " + lu_specsource
             for relation in result[lu_specsource]:
-                for lu_selecttarget in list(result[lu_specsource][relation].keys()):
+                print >>sys.stderr, "   Found " + relation
+                for lu_selecttarget in result[lu_specsource][relation].iterkeys():
+                    print >>sys.stderr,"       with " + lu_selecttarget
                     print lu_specsource + "\t" + relation + "\t" + lu_selecttarget
 
 
