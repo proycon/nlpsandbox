@@ -20,7 +20,7 @@ linenum = 0
 for line in ref:
     linenum += 1
     words = line.strip().split(' ')
-    
+
     if len(buffer) < len(words) + 10:
         for i in range(0,len(words) + 10):
             try:
@@ -34,11 +34,11 @@ for line in ref:
             if '|' in pos: pos = pos.split('|')[0]
             if '|' in lemma: lemma = lemma.split('|')[0]
             buffer.append( (word,lemma,pos) )
-        
+
     cursor = 0
     postags = []
-    lemmas = []    
-    
+    lemmas = []
+
     alignment = {}
     for i, word in enumerate(words):
         found = False
@@ -61,26 +61,26 @@ for line in ref:
                     if distance > 0: #only if order is right
                         if distance < mindistance:
                             best = target
-                            mindistance = distance                        
+                            mindistance = distance
                 if source+1 in alignment and len(alignment[source+1]) == 1:
                     distance = alignment[source+1][0] - target
                     if distance > 0: #only if order is right
                         if distance < mindistance:
                             best = target
-                            mindistance = distance                    
-            
+                            mindistance = distance
+
             if best != -1:
                 alignment[source] = [best]
             else:
                 alignment[source] = [min(targets)]
-    
-            
+
+
     if not alignment:
         print >>sys.stderr, "*********** Line " + str(linenum) + " -- No alignments found! *************"
         print >>sys.stderr, "Input:", repr(words)
         print >>sys.stderr, "Buffer:", repr(buffer)
-    
-         
+
+
     for i, word in enumerate(words):
         if i != 0: print " ",
         if i in alignment:
@@ -103,13 +103,13 @@ for line in ref:
             word,pos,lemma = bufline.strip().split('\t')
             word = word.strip()
             pos = pos.strip()
-            lemma = lemma.strip()            
+            lemma = lemma.strip()
             if '|' in pos: pos = pos.split('|')[0]
             if '|' in lemma: lemma = lemma.split('|')[0]
-            buffer.append( (word,lemma,pos) )        
+            buffer.append( (word,lemma,pos) )
 
 
-    
-ref.close()     
-    
-ttf.close()    
+
+ref.close()
+
+ttf.close()
