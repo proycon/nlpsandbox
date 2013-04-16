@@ -11,11 +11,12 @@ for adj in adjs:
 
 
 for filename in sys.argv[1:]:
-    for line in gzip.open(sys.argv[1]):
+    f_in = open(sys.argv[1])
+    for line in f_in:
         fields = line.strip().split('\t')
         freq = int(fields[1])
         lemmas = fields[0].strip(' ')
         for lemma in lemmas:
             if lemma.lower() in adjs:
                 print(line + "\t" + str(freq), file=f_out[lemma.lower()])
-
+    f_in.close()
