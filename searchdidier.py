@@ -6,7 +6,7 @@ adjs = ( 'energie','snel','exclusief','waardevol','luxe', 'verkoelend','koel','f
 
 f_out = {}
 for adj in adjs:
-    f_out[adj].open(adj+'.results','wt',encoding='utf-8')
+    f_out[adj] = open(adj+'.results','wt',encoding='utf-8')
 
 
 for filename in sys.argv[1:]:
