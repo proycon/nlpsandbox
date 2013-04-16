@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import gzip
+import sys
 
 adjs = ( 'energie','snel','exclusief','waardevol','luxe', 'verkoelend','koel','frissend','fris','aantrekkelijk','absorbeert ','automatisch','beschermend','krachtig','intelligent')
 
