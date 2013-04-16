@@ -13,8 +13,8 @@ for filename in sys.argv[1:]:
     for line in gzip.open(sys.argv[1]):
         fields = line.strip().split('\t')
         freq = int(fields[1])
-        words = fields[0].strip(' ')
-        for word in words:
-            if word in adjs:
-                print(line + "\t" + str(freq), file=f_out[word])
+        lemmas = fields[0].strip(' ')
+        for lemma in lemmas:
+            if lemma.lower() in adjs:
+                print(line + "\t" + str(freq), file=f_out[lemma.lower()])
 
