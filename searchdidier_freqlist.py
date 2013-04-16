@@ -2,12 +2,9 @@
 
 import sys
 from pynlpl.statistics import FrequencyList
-import didier
 
-
-for adj in didiers.adjs:
-    f_out[adj].close()
-    f_in = open(adj + '.results','rt',encoding='utf-8')
+for filename in sys.argv[1:]:
+    f_in = open(filename,'rt',encoding='utf-8')
     freqlist = FrequencyList()
     for line in f_in:
         fields = line.strip().split('\t')
@@ -15,7 +12,7 @@ for adj in didiers.adjs:
         for lemma in fields[0].split(' '):
             freqlist.count(lemma, count)
     f_in.close()
-    freqlist.save(adj + '.freqlist')
+    freqlist.save(filename + '.freqlist')
 
 
 
