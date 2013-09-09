@@ -16,8 +16,31 @@ def main():
 
     pt = PhraseTable(args.phrasetable)
     for source, targets in pt:
+        source = tuple(source.split())
         for target, scores in targets:
-            pass
+            target = tuple(target.split())
+            for length in range(1, len(source) - 2):
+                subsource = source[0:length]
+                subsource_s = " ".join(subsource)
+                if subsource_s in pt:
+                    subtargets = pt[subsource_s]
+                    for subtarget, _ in subtargets:
+                        if target.beginswith(subtarget):
+                            #we have a match:  x-y -> x'-y'
+                            #now see if we can find a y
+                            pass
+                        elif target.endswith(subtarget):
+                            #we have a match: x-y -> y'-x'
+                            #now see if we can find a y
+                            pass
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
