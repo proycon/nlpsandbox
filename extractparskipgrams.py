@@ -38,7 +38,6 @@ def main():
                     if subsource_s in pt:
                         subtargets = pt[subsource_s]
                         for subtarget, _ in subtargets:
-                            subtarget_s = " ".join(subtarget)
                             if target_s.startswith(subtarget):
                                 #we have a match:  x-y -> x'-y'
                                 #now see if we can find a y
@@ -61,11 +60,11 @@ def main():
                                 sourceleft = " ".join(subsource2)
                                 sourceright = " ".join(subsource)
                             if rightfixed_target2:
-                                targetleft = " ".join(subtarget)
-                                targetright = " ".join(subtarget2)
+                                targetleft = subtarget
+                                targetright = subtarget2
                             else:
-                                targetleft = " ".join(subtarget2)
-                                targetright = " ".join(subtarget)
+                                targetleft = subtarget2
+                                targetright = subtarget
 
                             skipgrams[(sourceleft,sourceright, targetleft, targetright)] += 1
                             print("\tFound skipgram " + sourceleft + " {*} " + sourceright + " --> " + targetleft + " {*} " + targetright,file=sys.stderr)
