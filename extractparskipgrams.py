@@ -39,7 +39,7 @@ def main():
                         subtargets = pt[subsource_s]
                         for subtarget, _ in subtargets:
                             subtarget_s = " ".join(subtarget)
-                            if target_s.beginswith(subtarget):
+                            if target_s.startswith(subtarget):
                                 #we have a match:  x-y -> x'-y'
                                 #now see if we can find a y
                                 matches.append( (subsource, rightfixed, subtarget, False))
