@@ -52,7 +52,7 @@ def main():
                 #now find matches that complement eachother
                 for i, (subsource, rightfixed_source, subtarget, rightfixed_target) in enumerate(matches):
                     for j, (subsource2, rightfixed_source2, subtarget2, rightfixed_target2) in enumerate(matches):
-                        if i != j and rightfixed_source != rightfixed_source2 and rightfixed_target != rightfixed_target2 and len(subsource) + len(subsource2) < len(source) - 1 and len(subtarget) + len(subtarget2) < len(target) - 1:
+                        if j > i and rightfixed_source != rightfixed_source2 and rightfixed_target != rightfixed_target2 and len(subsource) + len(subsource2) < len(source) - 1 and len(subtarget) + len(subtarget2) < len(target) - 1:
                             if rightfixed_source2:
                                 sourceleft = " ".join(subsource)
                                 sourceright = " ".join(subsource2)
