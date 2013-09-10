@@ -39,7 +39,6 @@ def main():
                         subtargets = pt[subsource_s]
                         for subtarget_s, _ in subtargets:
                             subtarget = subtarget_s.split()
-                            assert isinstance(subtarget,str)
                             if target_s.startswith(subtarget_s):
                                 #we have a match:  x-y -> x'-y'
                                 #now see if we can find a y
