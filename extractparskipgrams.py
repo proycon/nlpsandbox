@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+from __future__ import print_function, unicode_literals, division, absolute_import
+
 import argparse
 from pynlpl.formats.moses import PhraseTable
 from collections import defaultdict
+import sys
 
 
 
@@ -20,11 +23,14 @@ def main():
     skipgrams = defaultdict(int)  #key: (sourceleft, sourceright, targetleft, targetright)
 
     pt = PhraseTable(args.phrasetable)
-    for source_s, targets in pt:
+    l = len(pt)
+    for n, (source_s, targets) in enumerate(pt):
+        print("@" + str(n+1) + "/" + str(l),file=sys.stderr)
         source = tuple(source_s.split())
-        for target_s, scores in targets:
+        lt = len(targets)
+        for nt, (target_s, scores) in enumerate(targets):
+            print("\tTarget " + str(nt+1) + "/" + str(lt) ,file=sys.stderr)
             target = tuple(target_s.split())
-
             matches = []
             for length in range(1, len(source) - 2):
                 for subsource, rightfixed in ( (source[0:length],False) , (source[-length:], True) ):
@@ -42,26 +48,29 @@ def main():
                                 #now see if we can find a y
                                 matches.append( (subsource, rightfixed, subtarget, True)) #True=reversed/right-fixed
 
+            if matches:
+                print("\tFound " + str(len(matches)) + " partial matches, finding skipgrams..." ,file=sys.stderr)
+                #now find matches that complement eachother
+                for i, (subsource, rightfixed_source, subtarget, rightfixed_target) in enumerate(matches):
+                    for j, (subsource2, rightfixed_source2, subtarget2, rightfixed_target2) in enumerate(matches):
+                        if i != j and rightfixed_source != rightfixed_source2 and rightfixed_target != rightfixed_target2 and len(subsource) + len(subsource2) < len(source) - 1 and len(subtarget) + len(subtarget2) < len(target) - 1:
+                            if rightfixed_source2:
+                                sourceleft = " ".join(subsource)
+                                sourceright = " ".join(subsource2)
+                            else:
+                                sourceleft = " ".join(subsource2)
+                                sourceright = " ".join(subsource)
+                            if rightfixed_target2:
+                                targetleft = " ".join(subtarget)
+                                targetright = " ".join(subtarget2)
+                            else:
+                                targetleft = " ".join(subtarget2)
+                                targetright = " ".join(subtarget)
 
-            #now find matches that complement eachother
-            for i, (subsource, rightfixed_source, subtarget, rightfixed_target) in enumerate(matches):
-                for j, (subsource2, rightfixed_source2, subtarget2, rightfixed_target2) in enumerate(matches):
-                    if i != j and rightfixed_source != rightfixed_source2 and rightfixed_target != rightfixed_target2 and len(subsource) + len(subsource2) < len(source) - 1 and len(subtarget) + len(subtarget2) < len(target) - 1:
-                        if rightfixed_source2:
-                            sourceleft = " ".join(subsource)
-                            sourceright = " ".join(subsource2)
-                        else:
-                            sourceleft = " ".join(subsource2)
-                            sourceright = " ".join(subsource)
-                        if rightfixed_target2:
-                            targetleft = " ".join(subtarget)
-                            targetright = " ".join(subtarget2)
-                        else:
-                            targetleft = " ".join(subtarget2)
-                            targetright = " ".join(subtarget)
+                            skipgrams[(sourceleft,sourceright, targetleft, targetright)] += 1
+                            print("\tFound skipgram " + sourceleft + " {*} " + sourceright + " --> " + targetleft + " {*} " + targetright,file=sys.stderr)
 
-                        skipgrams[(sourceleft,sourceright, targetleft, targetright)] += 1
-
+    print("Outputting all skipgrams",file=sys.stderr)
     for (sourceleft, sourceright, targetleft, targetright), count in skipgrams.items():
         if count >= args.threshold:
             print(sourceleft + " {*} " + sourceright + "\t" + targetleft + " {*} " + targetright)
