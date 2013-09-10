@@ -37,12 +37,14 @@ def main():
                     subsource_s = " ".join(subsource)
                     if subsource_s in pt:
                         subtargets = pt[subsource_s]
-                        for subtarget, _ in subtargets:
-                            if target_s.startswith(subtarget):
+                        for subtarget_s, _ in subtargets:
+                            subtarget = subtarget_s.split()
+                            assert isinstance(subtarget,str)
+                            if target_s.startswith(subtarget_s):
                                 #we have a match:  x-y -> x'-y'
                                 #now see if we can find a y
                                 matches.append( (subsource, rightfixed, subtarget, False))
-                            elif target_s.endswith(subtarget):
+                            elif target_s.endswith(subtarget_s):
                                 #we have a match: x-y -> y'-x'
                                 #now see if we can find a y
                                 matches.append( (subsource, rightfixed, subtarget, True)) #True=reversed/right-fixed
@@ -60,11 +62,11 @@ def main():
                                 sourceleft = " ".join(subsource2)
                                 sourceright = " ".join(subsource)
                             if rightfixed_target2:
-                                targetleft = subtarget
-                                targetright = subtarget2
+                                targetleft = " ".join(subtarget)
+                                targetright = " ".join(subtarget2)
                             else:
-                                targetleft = subtarget2
-                                targetright = subtarget
+                                targetleft = " ".join(subtarget2)
+                                targetright = " ".join(subtarget)
 
                             skipgrams[(sourceleft,sourceright, targetleft, targetright)] += 1
                             print("\tFound skipgram " + sourceleft + " {*} " + sourceright + " --> " + targetleft + " {*} " + targetright,file=sys.stderr)
