@@ -11,6 +11,6 @@ except:
 doc = folia.Document(file=filename)
 count = 0
 for c in doc.select(folia.Correction):
-    print("SUGGESTIONS: " + ",".join([str(x) for x in c.suggestions()]))
+    print("ORIGINAL " + c.parent.text() + " SUGGESTIONS: " + ",".join([str(x) for x in c.suggestions()]))
     count += 1
 print(count)
