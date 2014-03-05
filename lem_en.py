@@ -23,7 +23,6 @@ def get_wordnet_pos(treebank_tag):
 inputfile = sys.argv[1]
 
 lemmatizer = wordnet.WordNetLemmatizer()
-lemmatizer.lemmatize('going', wordnet.VERB)
 
 with io.open(inputfile + '.lem', 'w',encoding='utf-8') as f_lemma:
     with io.open(inputfile + '.pos', 'w',encoding='utf-8') as f_pos:
