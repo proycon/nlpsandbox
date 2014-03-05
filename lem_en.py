@@ -31,10 +31,13 @@ with io.open(inputfile + '.lem', 'w',encoding='utf-8') as f_lemma:
                 posline = []
                 lemline = []
                 tokens = line.split(' ')
-                postags = pos_tag(tokens)
-                for token, postag in zip(tokens,postags):
+                for token, postag in pos_tag(tokens):
                     posline.append(postag)
-                    lemline.append(lemmatizer.lemmatize(token,postag))
+                    posforlem = get_wordnet_pos(postag)
+                    if posforlem:
+                        lemline.append(lemmatizer.lemmatize(token,posforlem))
+                    else:
+                        lemline.append(token)
                 f_lemma.write(" ".join(lemline))
                 f_pos.write(" ".join(posline))
 
