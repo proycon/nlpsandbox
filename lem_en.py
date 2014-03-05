@@ -27,7 +27,8 @@ lemmatizer = wordnet.WordNetLemmatizer()
 with io.open(inputfile + '.lem', 'w',encoding='utf-8') as f_lemma:
     with io.open(inputfile + '.pos', 'w',encoding='utf-8') as f_pos:
         with io.open(inputfile,'r',encoding='utf-8') as f:
-            for line in f:
+            for i, line in enumerate(f):
+                print(i,file=sys.stderr)
                 posline = []
                 lemline = []
                 tokens = line.split(' ')
@@ -38,7 +39,7 @@ with io.open(inputfile + '.lem', 'w',encoding='utf-8') as f_lemma:
                         lemline.append(lemmatizer.lemmatize(token,posforlem))
                     else:
                         lemline.append(token)
-                f_lemma.write(" ".join(lemline))
-                f_pos.write(" ".join(posline))
+                f_lemma.write(" ".join(lemline).strip() + "\n")
+                f_pos.write(" ".join(posline).strip() + "\n")
 
 
