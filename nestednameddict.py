@@ -1,5 +1,6 @@
+from __future__ import print_function, unicode_literals, division, absolute_import
 
-class NestedNamedDict():
+class NestedNamedDict(object):
     def __init__(self):
         self._node = {}
         self._list = False
