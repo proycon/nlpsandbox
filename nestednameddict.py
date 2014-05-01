@@ -88,7 +88,7 @@ if __name__ == '__main__':
     d.blah.l[2] = 'c'
 
 
-    for name in d.blah.l:
-        print(name)
+    for value in d.blah.l:
+        print(value)
 
     print(d)
