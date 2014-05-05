@@ -18,14 +18,25 @@ def processbuffer(text, buffer):
 
 if __name__ == '__main__':
     try:
+        filename = sys.argv[1]
+    except:
+        print("Usage: txt2folia_str.py inputfile docid set-url" ,file=sys.stderr)
+        sys.exit(2)
+
+    try:
         docid = sys.argv[2]
     except:
         docid = "untitled"
 
+    try:
+        seturl = sys.argv[3]
+    except:
+        seturl = "http://ilk.uvt.nl/folia/sets/string-annotation"
+
     doc = folia.Document(id=docid)
+    doc.declareannotation(folia.String, set="")
     text = doc.append(folia.Text)
 
-    filename = sys.argv[1]
 
     buffer = ""
     linenum = 0
