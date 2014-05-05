@@ -34,7 +34,7 @@ if __name__ == '__main__':
         seturl = "http://ilk.uvt.nl/folia/sets/string-annotation"
 
     doc = folia.Document(id=docid)
-    doc.declareannotation(folia.String, set="")
+    doc.declare(folia.String, set="")
     text = doc.append(folia.Text)
 
 
