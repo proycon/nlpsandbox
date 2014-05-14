@@ -1,14 +1,15 @@
 from __future__ import print_function, unicode_literals, division, absolute_import
 
 class NestedNamedDict(object):
-    def __init__(self, name):
+    def __init__(self, name, value = None):
         self._name = name
         self._node = {}
         self._list = False
+        self._value = value
 
     def __setattr__(self, attrib, value):
         if attrib[0] != '_' and not self._list:
-            self._node[attrib] = value
+            self._node[attrib] = NestedNamedDict(attrib, value)
         else:
             return super(NestedNamedDict,self).__setattr__(attrib, value)
 
@@ -32,7 +33,7 @@ class NestedNamedDict(object):
 
     def __setitem__(self, index, value):
         if isinstance(index,int):
-            self._node[index] = value
+            self._node[index] = NestedNamedDict(self._name, value)
             self._list = True
         else:
             return self.__setattr__(index, value)
@@ -49,23 +50,44 @@ class NestedNamedDict(object):
                 yield n
 
     def __str__(self):
-        if self._list:
+        if not (self._value is None):
+            return "<"  + self._name + ">" + str(self._value) + "</"  + self._name + ">"
+        elif self._list:
             s = ""
-            for node in self:
-                if isinstance(node, NestedNamedDict):
-                    s += str(node)
-                else:
-                    s += "<"  + self._name + ">" + str(node) + "</"  + self._name + ">"
+            for node in self._node.values():
+                s += str(node)
             return s
         else:
             s = "<" + self._name + ">"
-            for node, value in self._node.items():
-                if isinstance(value, NestedNamedDict):
-                    s += str(value)
-                else:
-                    s += "<" + node + ">" + str(value) + "</" + node + ">"
+            for node in self._node.values():
+                s += str(node)
             return s + "</" + self._name + ">"
 
+
+    #value handling
+    def __call__(self):
+        return self._value
+
+    def __eq__(self, other):
+        if self._value is None: return False
+        if isinstance(other, NestedNamedDict):
+            return self._value == other._value
+        else:
+            return self._value == other
+
+    def __gt__(self, other):
+        if self._value is None: return False
+        if isinstance(other, NestedNamedDict):
+            return self._value >  other._value
+        else:
+            return self._value >  other
+
+    def __lt__(self, other):
+        if self._value is None: return False
+        if isinstance(other, NestedNamedDict):
+            return self._value >  other._value
+        else:
+            return self._value >  other
 
 
 if __name__ == '__main__':
@@ -74,6 +96,14 @@ if __name__ == '__main__':
 
     d.blah.blieh.blo = 4
     d.blah.bluh = 5
+
+    #to get the actual values, you must used the attribute as a method (if not, it will give a NestedDict back)
+    print( d.blah.blieh.blo() )
+    print( d.blah.bluh() )
+
+    #or you can also do this, which does exactly the same:
+    print( d.blah.blieh.blo._value )
+    print( d.blah.bluh._value )
 
     for name in d.blah:
         print(name)
