@@ -16,7 +16,7 @@ def processfile(f, stats):
         print("ERROR PARSING " + f + ", skipping",file=sys.stderr)
         stats['errordocs'] += 1
         return
-    if doc.declared(folia.Correction, "http://raw.github.com/proycon/folia/master/setdefinitions/spellingcorrection.foliaset.xml"):
+    if doc.declared(folia.AnnotationType.CORRECTION, "http://raw.github.com/proycon/folia/master/setdefinitions/spellingcorrection.foliaset.xml"):
         stats['annotateddocs'] += 1
         stats['wordcount'] += len(doc.words())
         for correction in doc.select(folia.Correction):
