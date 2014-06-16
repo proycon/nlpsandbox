@@ -10,7 +10,10 @@ from pynlpl.formats import folia
 
 def processfile(f, stats):
     print("Processing " + f,file=sys.stderr)
-    doc = folia.Document(file=f)
+    try:
+        doc = folia.Document(file=f)
+    except:
+        print("ERROR PARSING " + f + ", skipping",file=sys.stderr)
     for correction in doc.select(folia.Correction):
         if correction.cls:
             stats['byclass'][correction.cls] += 1
