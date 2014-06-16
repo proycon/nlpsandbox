@@ -36,12 +36,12 @@ for f in sys.argv[1:]:
 
 
 print("BY CLASS")
-for cls, count in sorted(stats['byclass'], key= lambda x: x[1] * -1 ):
+for cls, count in sorted(stats['byclass'].items(), key= lambda x: x[1] * -1 ):
     print(cls + "\t" + count)
 
 print()
 print("BY ANNOTATOR")
-for annotator, count in sorted(stats['byannotator'], key= lambda x: x[1] * -1 ):
+for annotator, count in sorted(stats['byannotator'].items(), key= lambda x: x[1] * -1 ):
     print(annotator + "\t" + count)
 
 
