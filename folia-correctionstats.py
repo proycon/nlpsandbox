@@ -14,6 +14,7 @@ def processfile(f, stats):
         doc = folia.Document(file=f)
     except:
         print("ERROR PARSING " + f + ", skipping",file=sys.stderr)
+        stats['errordocs'] += 1
         return
     if doc.declared(folia.Correction, "http://raw.github.com/proycon/folia/master/setdefinitions/spellingcorrection.foliaset.xml"):
         stats['annotateddocs'] += 1
@@ -36,7 +37,7 @@ def processdir(d, stats):
             processfile(f, stats)
 
 
-stats = {'byclass': defaultdict(int), 'byannotator': defaultdict(int), 'annotateddocs':0, 'unannotateddocs':0 }
+stats = {'byclass': defaultdict(int), 'byannotator': defaultdict(int), 'annotateddocs':0, 'unannotateddocs':0, 'wordcount':0, 'correctioncount': 0,'errordocs': 0 }
 
 for f in sys.argv[1:]:
     if os.path.isdir(f):
@@ -46,7 +47,8 @@ for f in sys.argv[1:]:
 
 
 print("annotated documents = " + "\t" + str(stats['annotateddocs']))
-print("unannotated documents =" + "\t" + str(stats['unannotateddocs']))
+print("unannotated documents = " + "\t" + str(stats['unannotateddocs']))
+print("invalid documents = " + "\t" + str(stats['errordocs']))
 print("total words = " + "\t" + str(stats['wordcount']))
 print("total corrections = " + "\t" + str(stats['correctioncount']))
 
