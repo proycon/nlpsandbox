@@ -51,6 +51,7 @@ print("unannotated documents = " + "\t" + str(stats['unannotateddocs']))
 print("invalid documents = " + "\t" + str(stats['errordocs']))
 print("total words = " + "\t" + str(stats['wordcount']))
 print("total corrections = " + "\t" + str(stats['correctioncount']))
+print()
 
 print("BY CLASS")
 for cls, count in sorted(stats['byclass'].items(), key= lambda x: x[1] * -1 ):
