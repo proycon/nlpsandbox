@@ -5,7 +5,7 @@ import sys
 import os.path
 from collections import defaultdict
 import glob
-from pynlpl import folia
+from pynlpl.formats import folia
 
 
 def processfile(f, stats):
