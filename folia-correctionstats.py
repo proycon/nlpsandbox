@@ -14,6 +14,7 @@ def processfile(f, stats):
         doc = folia.Document(file=f)
     except:
         print("ERROR PARSING " + f + ", skipping",file=sys.stderr)
+        return
     for correction in doc.select(folia.Correction):
         if correction.cls:
             stats['byclass'][correction.cls] += 1
