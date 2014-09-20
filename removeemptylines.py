@@ -11,7 +11,7 @@ for filename in sys.argv[1:]:
     f = open(filename)
     for i, line in enumerate(f):
         line = line.strip()
-        if not line or '\r' in line:
+        if not line or line.find("\r") != -1:
             deletelines.add(i)
     f.close()
 
