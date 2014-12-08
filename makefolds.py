@@ -24,4 +24,4 @@ if __name__ == '__main__':
     except:
         folds = 10
 
-    makefolds(sys.argv[1])
+    makefolds(sys.argv[1],folds)
