@@ -6,7 +6,7 @@ import os
 import glob
 from pynlpl.formats.sonar import CorpusFiles
 
-index = {}
+
 
 print("Indexing " + sys.argv[1],file=sys.stderr)
 
@@ -28,13 +28,12 @@ for i, foliafile in enumerate(CorpusFiles(sys.argv[1],'folia.xml')):
 
     print("\t-> " + country,file=sys.stderr)
     country = country.strip().lower()
-    if not country in index:
-        index[country] = []
 
-    index[country].append(foliafile)
+    print(foliafile+"\t"+country)
     count += 1
 
-    print("... index now contains " + str(count) + " files" ,file=sys.stderr)
+    print("... indexed " + str(count) + " files" ,file=sys.stderr)
+
 
 
 
