@@ -16,6 +16,7 @@ for root, dirs, files in os.walk(sys.argv[1]):
             if not os.path.exists(foliafile):
                 print("WARNING: Missing FoLiA for " + f,file=sys.stderr)
                 continue
+            print("\tReading " + f + "...",file=sys.stderr)
             doc = lxml.etree.parse(f).getroot()
             for element in doc:
                 #element.tag, element.attrib['blah'], element.text
@@ -26,12 +27,16 @@ for root, dirs, files in os.walk(sys.argv[1]):
                 country = element.text()
                 pass
 
-            if country:
-                country = country.strip.lower()
-                if not country in index:
-                    index[country] = []
+            if not country:
+                country = "unknown"
 
-                index[country].append(foliafile)
+            print("\t-> " + country,file=sys.stderr)
+            country = country.strip.lower()
+            if not country in index:
+                index[country] = []
+
+            index[country].append(foliafile)
+
     print("... index now contains " + str(sum( [ len(x) for x in index.values() ])) + " files" ,file=sys.stderr)
 
 
