@@ -2,7 +2,7 @@
 
 import sys
 import lxml.etree
-
+import os
 
 index = {}
 
@@ -21,16 +21,17 @@ for root, dirs, files in os.walk(sys.argv[1]):
                 #element.tag, element.attrib['blah'], element.text
                 pass
 
-            country = False
+            country = None
             for element in doc.xpath("//cmd:CMD/cmd::Components/cmd:SoNaRcorpus/Source/Country",namespaces={'cmd':"http://www.clarin.eu/cmd/"}):
                 country = element.text()
                 pass
 
-            country = country.strip.lower()
-            if not country in index:
-                index[country] = []
+            if country:
+                country = country.strip.lower()
+                if not country in index:
+                    index[country] = []
 
-            index[country].append(foliafile)
+                index[country].append(foliafile)
     print("... index now contains " + str(sum( [ len(x) for x in index.values() ])) + " files" ,file=sys.stderr)
 
 
