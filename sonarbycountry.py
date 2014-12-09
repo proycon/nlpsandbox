@@ -20,7 +20,7 @@ for i, foliafile in enumerate(CorpusFiles(sys.argv[1],'folia.xml')):
     doc = lxml.etree.parse(cmdifile).getroot()
     country = None
     for element in doc.xpath("/cmd:CMD/cmd:Components/cmd:SoNaRcorpus/cmd:Text/cmd:Source/cmd:Country",namespaces={'cmd':"http://www.clarin.eu/cmd/"}):
-        country = element.text()
+        country = element.text
         pass
 
     if not country:
