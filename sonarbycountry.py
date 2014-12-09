@@ -22,7 +22,7 @@ for root, dirs, files in os.walk(sys.argv[1]):
                 pass
 
             country = None
-            for element in doc.xpath("//cmd:CMD/cmd::Components/cmd:SoNaRcorpus/Source/Country",namespaces={'cmd':"http://www.clarin.eu/cmd/"}):
+            for element in doc.xpath("//cmd:CMD/cmd::Components/cmd:SoNaRcorpus/cmd:Source/cmd:Country",namespaces={'cmd':"http://www.clarin.eu/cmd/"}):
                 country = element.text()
                 pass
 
