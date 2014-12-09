@@ -27,7 +27,7 @@ for i, foliafile in enumerate(CorpusFiles(sys.argv[1],'folia.xml')):
         country = "unknown"
 
     print("\t-> " + country,file=sys.stderr)
-    country = country.strip.lower()
+    country = country.strip().lower()
     if not country in index:
         index[country] = []
 
