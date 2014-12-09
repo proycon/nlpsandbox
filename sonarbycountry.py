@@ -8,9 +8,9 @@ index = {}
 
 print("Indexing",file=sys.stderr)
 for root, dirs, files in os.walk(sys.argv[1]):
-    print("Processing " + root + "...",file=sys.stderr)
+    print("Processing " + root + "... (" + str(len(files)) + " files)",file=sys.stderr)
     for f in files:
-        f = root + f
+        f = os.path.join(root,f)
         if f[-9:] == ".cmdi.xml":
             foliafile = f[:-9] + ".folia.xml"
             if not os.path.exists(foliafile):
@@ -18,10 +18,6 @@ for root, dirs, files in os.walk(sys.argv[1]):
                 continue
             print("\tReading " + f + "...",file=sys.stderr)
             doc = lxml.etree.parse(f).getroot()
-            for element in doc:
-                #element.tag, element.attrib['blah'], element.text
-                pass
-
             country = None
             for element in doc.xpath("//cmd:CMD/cmd::Components/cmd:SoNaRcorpus/cmd:Source/cmd:Country",namespaces={'cmd':"http://www.clarin.eu/cmd/"}):
                 country = element.text()
