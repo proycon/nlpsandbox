@@ -19,7 +19,7 @@ for i, foliafile in enumerate(CorpusFiles(sys.argv[1],'folia.xml')):
     print("Processing #" + str(i+1) + " -- " + cmdifile + "...",file=sys.stderr)
     doc = lxml.etree.parse(cmdifile).getroot()
     country = None
-    for element in doc.xpath("//cmd:CMD/cmd::Components/cmd:SoNaRcorpus/cmd:Text/cmd:Source/cmd:Country",namespaces={'cmd':"http://www.clarin.eu/cmd/"}):
+    for element in doc.xpath("/cmd:CMD/cmd:Components/cmd:SoNaRcorpus/cmd:Text/cmd:Source/cmd:Country",namespaces={'cmd':"http://www.clarin.eu/cmd/"}):
         country = element.text()
         pass
 
