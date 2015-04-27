@@ -3,12 +3,14 @@
 from __future__ import print_function, unicode_literals, division, absolute_import
 
 import glob
+import sys
 from collections import defaultdict
 
 hist_instances = defaultdict(int)
 hist_classes = defaultdict(int)
 
-for filename in glob.glob("*.train"):
+for i, filename in enumerate(glob.glob("*.train")):
+    if i % 1000 == 0: print("@" + str(i), file=sys.stderr)
     with open(filename,'r',encoding='utf-8') as f:
         instances = 0
         classes = defaultdict(int)
