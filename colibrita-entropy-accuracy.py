@@ -70,7 +70,7 @@ entropyaccuracy.sort()
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='times')
-a,b,r,p,std_err = scipy.stats.linregress([ x[0] for x in entropyaccuracy], [x[1] for x in entropyaccuracy],1)
+a,b,r,p,std_err = scipy.stats.linregress([ x[0] for x in entropyaccuracy], [x[1] for x in entropyaccuracy])
 print("Linear regression: r",r,'p',p,'std_err',std_err, file=sys.stderr)
 y = polyval([a,b], [ x[0] for x in entropyaccuracy ])
 
