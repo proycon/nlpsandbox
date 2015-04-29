@@ -22,7 +22,7 @@ for docid, data in senses.items():
     doc = folia.Document(file=sourcedir + '/' + docid + ".xml")
     doc.declare(folia.SenseAnnotation, "cornetto")
     for tokenid, sense in data.items():
-        doc[tokenid].append( folia.SenseAnnotation(cls=sense) )
+        doc[tokenid].append( folia.SenseAnnotation, cls=sense )
     doc.save(targetdir + "/" + docid + ".folia.xml")
 
 
