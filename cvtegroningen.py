@@ -95,6 +95,11 @@ for word in foliadoc.words():
         elif str(word)[1] == "G":
             index = int(str(word)[2:-1])
             gapcontent = gaps[index]
+            index = word.parent.getindex(word)
+            if all( ( c == '$' for c in gapcontent) ):
+                word.parent.data[index] = folia.Gap(doc, cls='cancelled')
+            else:
+                word.parent.data[index] = folia.Gap(doc,content=gapcontent, cls='cancelled')
 
 foliadoc.save()
 
