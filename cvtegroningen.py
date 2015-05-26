@@ -17,9 +17,10 @@ gaps=[]
 correctionbuffer = ""
 gapbuffer=""
 incorrection = False
+ingap = False
 
 text = ""
-with open(filename,'r',encoding='utf-8') as f, open(tmpfilename,'w',encoding='utf-8'):
+with open(filename,'r',encoding='iso-8859-15') as f, open(tmpfilename,'w',encoding='utf-8') as f_out:
     for line in f:
         newline = ""
         for c in line:
@@ -33,6 +34,7 @@ with open(filename,'r',encoding='utf-8') as f, open(tmpfilename,'w',encoding='ut
                     correctionbuffer = ""
             elif c == "[":
                 ingap = True
+                gapbuffer = ""
             elif c == "]":
                 if ingap:
                     ingap = False
@@ -46,15 +48,22 @@ with open(filename,'r',encoding='utf-8') as f, open(tmpfilename,'w',encoding='ut
                 gapbuffer += c
             else:
                 newline += c
-        tmpfilename.write(newline)
+        f_out.write(newline)
 
-tokenizer = ucto.Tokenizer(settingsfile="/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True)
+tokenizer = ucto.Tokenizer("/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True)
 tokenizer.tokenize(tmpfilename, foliafilename)
 os.unlink(tmpfilename)
 
 foliadoc = folia.Document(file=foliafilename)
 foliadoc.declare(folia.AnnotationType.CORRECTION, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/spellingcorrection.foliaset.xml")
-foliadoc.declare(folia.AnnotationType.GAPS, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/gaps.foliaset.xml")
+foliadoc.declare(folia.AnnotationType.GAP, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/gaps.foliaset.xml")
+
+#remove text-content on sentences (will contain placeholders and has no added value):
+for sentence in foliadoc.sentences():
+    for i, item in enumerate(sentence.data):
+        if isinstance(item, folia.TextContent):
+            del sentence.data[i]
+            
 
 for word in foliadoc.words():
     if word.cls == "PLACEHOLDER":
@@ -62,20 +71,28 @@ for word in foliadoc.words():
         if str(word)[1] == "C":
             index = int(str(word)[2:-1])
             originaltext,newtext = corrections[index]
+            if all( not c.isalnum() for c in newtext ):
+                word.cls = "PUNCTUATION"
+            elif newtext.isnumeric():
+                word.cls = "NUMBER"
+            else:
+                word.cls = "WORD"
+
             if originaltext.lower() == newtext.lower():
-                word.correct(original=originaltext, new=newtext,cls='capitalizationerror')
+                correction = word.correct(new=newtext,cls='capitalizationerror')
+                correction.original().settext(originaltext)
             elif ' ' in originaltext and originaltext.replace(' ','') == newtext:
-                original = folia.Original(doc, *[ folia.Word(doc, x,cls="WORD") for x in originaltext.split(' ') ])
-                correction = folia.Correction(doc, original,folia.New(folia.Word(doc, newtext)),cls='spliterror')
+                original = folia.Original(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in originaltext.split(' ') ])
+                correction = folia.Correction(doc, original,folia.New(doc, folia.Word(doc, newtext,generate_id_in=word.parent)),cls='spliterror')
                 index = word.parent.getindex(word)
                 word.parent.data[index] = correction
             elif ' ' in newtext and newtext.replace(' ','') == originaltext:
-                new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD") for x in newtext.split(' ') ])
-                correction = folia.Correction(doc, new,folia.Original(folia.Word(doc, originaltext)),cls='runonerror')
+                new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in newtext.split(' ') ])
+                correction = folia.Correction(doc, new,folia.Original(doc, folia.Word(doc, originaltext,generate_id_in=word.parent)),cls='runonerror')
                 index = word.parent.getindex(word)
                 word.parent.data[index] = correction
-            elif originaltext == "" and not newtext.alnum():
-                correction = folia.Correction(folia.Original(doc),folia.New(doc, folia.Word(doc, newtext,cls="PUNCTUATION")),cls='missingpunctuation')
+            elif originaltext == "" and all( not c.isalnum() for c in newtext ):
+                correction = folia.Correction(doc, folia.Original(doc),folia.New(doc, folia.Word(doc, newtext,cls="PUNCTUATION",generate_id_in=word.parent)),cls='missingpunctuation')
                 index = word.parent.getindex(word)
                 word.parent.data[index] = correction
             elif originaltext == "":
@@ -84,13 +101,15 @@ for word in foliadoc.words():
                 correction.original().data = []
             elif newtext == "":
                 #deletion
-                if not originaltext.alnum():
+                if not originaltext.isalnum():
                     correction = word.correct(new=[], cls='redundantpunctuation')
                 else:
                     correction = word.correct(new=[], cls='redundantword')
             else:
-                word.correct(original=originaltext, new=newtext,cls="uncertain")
-
+                for i, item in enumerate(word.data):
+                    if isinstance(item, folia.TextContent):
+                        del word.data[i]
+                word.append(folia.Correction,  folia.Original( doc, folia.TextContent(doc,originaltext)), folia.New(doc, folia.TextContent(doc,newtext)), cls="uncertain")
 
         elif str(word)[1] == "G":
             index = int(str(word)[2:-1])
