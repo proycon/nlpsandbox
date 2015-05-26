@@ -55,15 +55,14 @@ tokenizer.tokenize(tmpfilename, foliafilename)
 os.unlink(tmpfilename)
 
 foliadoc = folia.Document(file=foliafilename)
-foliadoc.declare(folia.AnnotationType.CORRECTION, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/spellingcorrection.foliaset.xml")
-foliadoc.declare(folia.AnnotationType.GAP, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/gaps.foliaset.xml")
+foliadoc.declare(folia.AnnotationType.CORRECTION, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/spellingcorrection.foliaset.xml", annotator="Sjors van Ooij", annotatortype=folia.AnnotatorType.AUTO)
+foliadoc.declare(folia.AnnotationType.GAP, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/gaps.foliaset.xml", annotator="Sjors van Ooij", annotatortype=folia.AnnotatorType.AUTO)
 
 #remove text-content on sentences (will contain placeholders and has no added value):
 for sentence in foliadoc.sentences():
     for i, item in enumerate(sentence.data):
         if isinstance(item, folia.TextContent):
             del sentence.data[i]
-            
 
 for word in foliadoc.words():
     if word.cls == "PLACEHOLDER":
