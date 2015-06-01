@@ -8,11 +8,6 @@ import re
 import ucto #pylint: disable=import-error
 from pynlpl.formats import folia #pylint: disable=import-error
 
-filename = sys.argv[1]
-if os.path.isdir(filename):
-    processdir(filename)
-else:
-    processfile(filename)
 
 def processdir(dirname):
     for f in os.listdir(dirname):
@@ -210,4 +205,9 @@ def processfile(filename):
 
 
 
-
+if __name__ == '__main__':
+    filename = sys.argv[1]
+    if os.path.isdir(filename):
+        processdir(filename)
+    else:
+        processfile(filename)
