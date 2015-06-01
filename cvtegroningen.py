@@ -4,6 +4,7 @@
 
 import sys
 import os
+import re
 import ucto #pylint: disable=import-error
 from pynlpl.formats import folia #pylint: disable=import-error
 
@@ -31,36 +32,51 @@ def processfile(filename):
     gapbuffer=""
     incorrection = False
     ingap = False
+    mins = None
+    words = None
+    nospace = False
 
     with open(filename,'r',encoding='iso-8859-15') as f, open(tmpfilename,'w',encoding='utf-8') as f_out:
         for line in f:
             newline = ""
-            for c in line:
-                if c == '#':
-                    if incorrection:
-                        incorrection = False
-                        newline += "%C" + str(len(corrections)) + "%" #placeholder
-                        corrections.append( tuple(correctionbuffer.split('~')) )
-                    else:
-                        incorrection = True
-                        correctionbuffer = ""
-                elif c == "[":
-                    ingap = True
-                    gapbuffer = ""
-                elif c == "]":
-                    if ingap:
-                        ingap = False
-                        newline += "%G" + str(len(gaps)) + "%" #placeholder
-                        gaps.append(gapbuffer)
+            m =  re.match("(%d+) min; (%d+) words)", line)
+            if m:
+                mins = m.group(1)
+                words = m.group(2)
+            else:
+                for i, c in enumerate(line):
+                    if c == '#':
+                        if incorrection:
+                            incorrection = False
+                            newline += "%C" + str(len(corrections)) + "%" #placeholder
+                            corrections.append( tuple(correctionbuffer.split('~')) )
+                        else:
+                            incorrection = True
+                            correctionbuffer = ""
+                    elif c == "[":
+                        ingap = True
+                        gapbuffer = ""
+                        if i > 0:
+                            nospace = c[i-1]
+                        else:
+                            nospace = False
+                    elif c == "]":
+                        if ingap:
+                            if nospace and i +1 < len(line) and c[i+1].isalnum():
+                                #gap is in the middle of a word
+
+                            ingap = False
+                            newline += "%G" + str(len(gaps)) + "%" #placeholder
+                            gaps.append(gapbuffer)
+                        else:
+                            newline += c
+                    elif incorrection:
+                        correctionbuffer += c
+                    elif ingap:
+                        gapbuffer += c
                     else:
                         newline += c
-                elif incorrection:
-                    correctionbuffer += c
-                elif ingap:
-                    gapbuffer += c
-                else:
-                    newline += c
-            f_out.write(newline)
+                f_out.write(newline)
 
     tokenizer = ucto.Tokenizer("/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True)
     tokenizer.tokenize(tmpfilename, foliafilename)
@@ -69,6 +85,11 @@ def processfile(filename):
     foliadoc = folia.Document(file=foliafilename)
     foliadoc.declare(folia.AnnotationType.CORRECTION, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/spellingcorrection.foliaset.xml", annotator="Sjors van Ooij", annotatortype=folia.AnnotatorType.AUTO)
     foliadoc.declare(folia.AnnotationType.GAP, "https://raw.githubusercontent.com/proycon/folia/master/setdefinitions/gaps.foliaset.xml", annotator="Sjors van Ooij", annotatortype=folia.AnnotatorType.AUTO)
+
+    if words is not None:
+        foliadoc.metadata['words'] = words
+    if mins is not None:
+        foliadoc.metadata['annotationtime'] = mins
 
     #remove text-content on sentences (will contain placeholders and has no added value):
     for sentence in foliadoc.sentences():
