@@ -44,7 +44,7 @@ def processfile(filename):
                 if m:
                     docid = m.group(1)
                     score = m.group(2)
-            m =  re.match("(%d+) min; (%d+) words)", line)
+            m =  re.match(r"\((%d+) min; (%d+) words\)", line)
             if m:
                 mins = m.group(1)
                 words = m.group(2)
@@ -65,13 +65,13 @@ def processfile(filename):
                         ingap = True
                         gapbuffer = ""
                         if i > 0:
-                            nospace = (c[i-1] == " ")
+                            nospace = (line[i-1] == " ")
                             begin = i-1
                         else:
                             nospace = False
                     elif c == "]":
                         if ingap:
-                            if nospace and i +1 < len(line) and c[i+1].isalnum():
+                            if nospace and i +1 < len(line) and line[i+1].isalnum():
                                 #gap is in the middle of a word
                                 ingap = False
                                 newline += "%I" + str(len(inlinegaps)) + "%" #placeholder
@@ -90,7 +90,7 @@ def processfile(filename):
                                 gaps.append(gapbuffer)
                         else:
                             newline += c
-                    elif c == "\\" and i < len(line) - 1 and c[i+1] == "\\":
+                    elif c == "\\" and i < len(line) - 1 and line[i+1] == "\\":
                         skipchar = 1
                         newline += "%C" + str(len(corrections)) + "%" #placeholder
                         corrections.append( ('','.') )
