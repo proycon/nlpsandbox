@@ -142,6 +142,7 @@ def processfile(filename):
 
     for word in foliadoc.words():
         if word.cls == "PLACEHOLDER":
+            print("Processing placeholder ", str(word),file=sys.stderr)
             doc = word.doc
             if str(word)[1] == "H":
                 nextword = word.next(folia.Word)
