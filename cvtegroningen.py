@@ -59,6 +59,8 @@ def processfile(filename):
                         incorrection = False
                         newline += "%C" + str(len(corrections)) + "%" #placeholder
                         corrections.append( tuple(correctionbuffer.split('~')) )
+                        if correctionbuffer.split('~')[1] in ('.','?'):
+                            newline += " <utt> " #force new sentence
                     else:
                         incorrection = True
                         correctionbuffer = ""
@@ -95,6 +97,7 @@ def processfile(filename):
                     skipchar = 1
                     newline += "%C" + str(len(corrections)) + "%" #placeholder
                     corrections.append( ('','.') )
+                    newline += " <utt> " #force new sentence
                     newline += " %H%" #placeholder triggering capitalization of next word
                 elif incorrection:
                     correctionbuffer += c
@@ -102,7 +105,7 @@ def processfile(filename):
                     gapbuffer += c
                 else:
                     newline += c
-            if newline: newline += "%B%"
+            if newline and not ingap and not incorrection: newline += "%B%"
             f_out.write(newline)
 
     tokenizer = ucto.Tokenizer("/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True,docid=docid)
@@ -203,11 +206,23 @@ def processfile(filename):
                 index = int(str(word)[2:-1])
                 left, gapcontent, right = inlinegaps[index]
                 word.settext(left + right)
-                word.add(folia.TextContent, left, folia.TextMarkupGap(doc, gapcontent), right, cls='original')
+                gap = folia.TextMarkupGap(doc, gapcontent)
+                word.add(folia.TextContent, left, gap, right, cls='original')
                 word.cls = "WORD"
             elif str(word)[1] == "B":
                 index = word.parent.getindex(word)
-                word.parent.data[index] = folia.Linebreak(doc)
+                if index == 0:
+                    #add to end of previous sentence
+                    prevsentence = word.parent.previous(folia.Sentence,None)
+                    if prevsentence:
+                        prevsentence.add(folia.Linebreak)
+                        word.parent.remove(word)
+                    else:
+                        word.parent.data[index] = folia.Linebreak(doc)
+                else:
+                    word.parent.data[index] = folia.Linebreak(doc)
+            else:
+                raise Exception("Can not resolve placeholder " + str(word))
 
 
 
