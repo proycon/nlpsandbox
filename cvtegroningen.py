@@ -35,9 +35,11 @@ def processfile(filename):
     mins = None
     words = None
     nospace = False
+    docid = os.path.basename(tmpfilename)
+    score = None
 
     with open(filename,'r',encoding='iso-8859-15') as f, open(tmpfilename,'w',encoding='utf-8') as f_out:
-        for line in f:
+        for i, line in enumerate(f):
             newline = ""
             m =  re.match("(%d+) min; (%d+) words)", line)
             if m:
@@ -64,6 +66,7 @@ def processfile(filename):
                         if ingap:
                             if nospace and i +1 < len(line) and c[i+1].isalnum():
                                 #gap is in the middle of a word
+                                #TODO
 
                             ingap = False
                             newline += "%G" + str(len(gaps)) + "%" #placeholder
@@ -78,7 +81,7 @@ def processfile(filename):
                         newline += c
                 f_out.write(newline)
 
-    tokenizer = ucto.Tokenizer("/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True)
+    tokenizer = ucto.Tokenizer("/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True,docid=docid)
     tokenizer.tokenize(tmpfilename, foliafilename)
     os.unlink(tmpfilename)
 
