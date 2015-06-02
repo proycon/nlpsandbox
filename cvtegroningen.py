@@ -26,11 +26,13 @@ def processfile(filename):
     inlinegaps=[]
     correctionbuffer = ""
     gapbuffer=""
+    hyphbuffer = ""
     incorrection = False
     ingap = False
     mins = None
     words = None
     nospace = False
+    hyph = False
     docid = os.path.basename(tmpfilename)
     score = None
     begin = 0
@@ -38,6 +40,9 @@ def processfile(filename):
 
     with open(filename,'r',encoding='iso-8859-15') as f, open(tmpfilename,'w',encoding='utf-8') as f_out:
         for linenum, line in enumerate(f):
+            if hyphbuffer:
+                line = hyphbuffer + line
+                hyphbuffer = ""
             newline = ""
             strippedline = line.strip()
             if linenum == 0 and strippedline.find('score') != -1:
@@ -57,13 +62,32 @@ def processfile(filename):
                 if c == '#':
                     if incorrection:
                         incorrection = False
+                        if hyph:
+                            newline += "%B%"
                         newline += "%C" + str(len(corrections)) + "%" #placeholder
-                        corrections.append( tuple(correctionbuffer.split('~')) )
-                        if correctionbuffer.split('~')[1] in ('.','?'):
+                        originaltext, newtext = correctionbuffer.split('~')
+                        if hyph:
+                            newtext = newtext.replace('-','')
+                        corrections.append( (originaltext, newtext) )
+                        if newtext in ('.','?'):
                             newline += " <utt> " #force new sentence
                     else:
                         incorrection = True
+                        hyph = False
                         correctionbuffer = ""
+                elif c == '-' and i < len(line) - 1 and line[i+1] == "\n":
+                    if incorrection:
+                        hyph = True
+                    else:
+                        hyphbuffer = ""
+                        for j in range(i-1,0,-1):
+                            if line[j].isalpha():
+                                hyphbuffer = line[j] + hyphbuffer
+                            else:
+                                break
+                        newline = newline[:-len(hyphbuffer)]
+                    skipchar = 1
+                    continue
                 elif c == "[":
                     ingap = True
                     gapbuffer = ""
@@ -82,10 +106,14 @@ def processfile(filename):
                             for j in range(begin,0,-1):
                                 if line[j].isalpha():
                                     left = line[j] + left
+                                else:
+                                    break
                             right = ""
                             for j in range(i+1,len(line)):
                                 if line[j].isalpha():
                                     right = right + line[j]
+                                else:
+                                    break
                             inlinegaps.append((line,gapbuffer,right))
                         else:
                             ingap = False
@@ -105,7 +133,7 @@ def processfile(filename):
                     gapbuffer += c
                 else:
                     newline += c
-            if newline and not ingap and not incorrection: newline += "%B%"
+            if strippedline and newline and not ingap and not incorrection: newline += "%B%"
             f_out.write(newline)
 
     tokenizer = ucto.Tokenizer("/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True,docid=docid)
@@ -189,6 +217,12 @@ def processfile(filename):
                         correction = word.correct(new=[], cls='redundantpunctuation')
                     else:
                         correction = word.correct(new=[], cls='redundantword')
+                elif ' ' in originaltext or ' ' in newtext:
+                    new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in newtext.split(' ') ])
+                    original = folia.Original(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in originaltext.split(' ') ])
+                    correction = folia.Correction(doc, new, original,cls='uncertain')
+                    index = word.parent.getindex(word)
+                    word.parent.data[index] = correction
                 else:
                     for i, item in enumerate(word.data):
                         if isinstance(item, folia.TextContent):
