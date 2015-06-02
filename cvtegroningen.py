@@ -214,9 +214,12 @@ def processfile(filename):
                 elif newtext == "":
                     #deletion
                     if not originaltext.isalnum():
-                        correction = word.correct(new=[], cls='redundantpunctuation')
+                        cls='redundantpunctuation'
                     else:
-                        correction = word.correct(new=[], cls='redundantword')
+                        cls='redundantword'
+                    correction = folia.Correction(doc, folia.New(doc),folia.Original(doc, word),cls=cls)
+                    index = word.parent.getindex(word)
+                    word.parent.data[index] = correction
                 elif ' ' in originaltext or ' ' in newtext:
                     new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in newtext.split(' ') ])
                     original = folia.Original(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in originaltext.split(' ') ])
