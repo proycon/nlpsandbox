@@ -41,7 +41,7 @@ def processfile(filename,parseonly=False):
     with open(filename,'r',encoding='iso-8859-15') as f, open(tmpfilename,'w',encoding='utf-8') as f_out:
         for linenum, line in enumerate(f):
             if hyphbuffer:
-                line = hyphbuffer + line
+                line = hyphbuffer + line.lstrip()
                 hyphbuffer = ""
             newline = ""
             strippedline = line.strip()
