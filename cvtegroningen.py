@@ -134,7 +134,7 @@ def processfile(filename,parseonly=False):
                     corrections.append( ('','.') )
                     newline += " <utt> " #force new sentence
                     newline += " %H%" #placeholder triggering capitalization of next word
-                elif incorrection:
+                elif incorrection and not ingap:
                     correctionbuffer += c
                 elif ingap:
                     gapbuffer += c
