@@ -9,6 +9,12 @@ import ucto #pylint: disable=import-error
 from pynlpl.formats import folia #pylint: disable=import-error
 
 
+
+#Changes with respect to original data:
+
+# - Hyphenisation is undone and the linebreak is put prior to the hyphenised word
+# - Crossed-out text inside corrections are ignored completely:  #typ[e]p~typ#
+
 def processdir(dirname,parseonly=False):
     for f in os.listdir(dirname):
         f = os.path.join(dirname,f)
