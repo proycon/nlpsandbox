@@ -140,13 +140,13 @@ def processfile(filename):
             if isinstance(item, folia.TextContent):
                 del sentence.data[i]
 
-    for word in foliadoc.words():
+    for word in list(foliadoc.words()):
         if word.cls == "PLACEHOLDER":
             print("Processing placeholder ", str(word),file=sys.stderr)
             doc = word.doc
             if str(word)[1] == "H":
                 nextword = word.next(folia.Word)
-                if nextword:
+                if nextword and str(nextword)[0] != '%':
                     originaltext = str(nextword)
                     newtext = str(nextword)[0].upper() + str(nextword)[1:]
                     correction = nextword.correct(new=newtext,cls='capitalizationerror')
