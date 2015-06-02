@@ -10,10 +10,17 @@ from pynlpl.formats import folia #pylint: disable=import-error
 
 
 
-#Changes with respect to original data:
+# Changes with respect to original data:
 
 # - Hyphenisation is undone and the linebreak is put prior to the hyphenised word
 # - Crossed-out text inside corrections are ignored completely:  #typ[e]p~typ#
+#    (crossed-out text outside of corrections are preserved as gaps, when
+#    occuring in the middle of a word, they are preserved as t-gaps in an
+#    additional t with class original.
+
+
+
+
 
 def processdir(dirname,parseonly=False):
     for f in os.listdir(dirname):
@@ -146,7 +153,7 @@ def processfile(filename,parseonly=False):
                     correctionbuffer += c
                 elif ingap:
                     gapbuffer += c
-                else:
+                elif c != "\r":
                     newline += c
             if strippedline and newline and not ingap and not incorrection: newline += "%B%"
             f_out.write(newline)
