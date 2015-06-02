@@ -121,12 +121,14 @@ def processfile(filename,parseonly=False):
                                     left = line[j] + left
                                 else:
                                     break
+                            newline = newline[:-len(left)]
                             right = ""
                             for j in range(i+1,len(line)):
                                 if line[j].isalpha():
                                     right = right + line[j]
                                 else:
                                     break
+                            skipchar = len(right)
                             inlinegaps.append((left,gapbuffer,right))
                         else:
                             ingap = False
