@@ -14,7 +14,7 @@ def processdir(dirname):
         f = os.path.join(dirname,f)
         if f.endswith('.txt'):
             processfile(f)
-        elif os.isdir(f):
+        elif os.path.isdir(f):
             processdir(f)
 
 def processfile(filename):
