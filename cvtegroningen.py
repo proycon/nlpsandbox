@@ -127,7 +127,7 @@ def processfile(filename,parseonly=False):
                                     right = right + line[j]
                                 else:
                                     break
-                            inlinegaps.append((line,gapbuffer,right))
+                            inlinegaps.append((left,gapbuffer,right))
                         else:
                             ingap = False
                             newline += "%G" + str(len(gaps)) + "%" #placeholder
