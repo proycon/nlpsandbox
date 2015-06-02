@@ -89,6 +89,7 @@ def processfile(filename,parseonly=False):
                         try:
                             originaltext, newtext = correctionbuffer.split('~')
                         except ValueError:
+                            print("LINE: ", line,file=sys.stderr)
                             raise Exception("Unable to split correctionbuffer in " + filename + ": " + correctionbuffer)
                         if hyph:
                             newtext = newtext.replace('-','')
