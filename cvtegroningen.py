@@ -136,6 +136,7 @@ def processfile(filename):
             if strippedline and newline and not ingap and not incorrection: newline += "%B%"
             f_out.write(newline)
 
+    print("docid: ", docid, file=sys.stderr)
     tokenizer = ucto.Tokenizer("/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True,docid=docid)
     tokenizer.tokenize(tmpfilename, foliafilename)
     os.unlink(tmpfilename)
@@ -152,7 +153,7 @@ def processfile(filename):
         foliadoc.metadata['score'] = score
 
     dirname = os.path.basename(os.path.dirname(filename))
-    print(filename,"--",dirname)
+    print(filename,"--",dirname,file=sys.stderr)
     foliadoc.metadata['school'] = " ".join(dirname.split(' ')[:-2])
     foliadoc.metadata['class'] = dirname.split(' ')[-1]
 
