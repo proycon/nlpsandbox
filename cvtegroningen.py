@@ -217,8 +217,8 @@ def processfile(filename):
                         cls='redundantpunctuation'
                     else:
                         cls='redundantword'
-                    correction = folia.Correction(doc, folia.New(doc),folia.Original(doc, word),cls=cls)
                     index = word.parent.getindex(word)
+                    correction = folia.Correction(doc, folia.New(doc),folia.Original(doc, word),cls=cls)
                     word.parent.data[index] = correction
                 elif ' ' in originaltext or ' ' in newtext:
                     new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in newtext.split(' ') ])
