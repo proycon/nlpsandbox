@@ -293,6 +293,8 @@ def processfile(filename,parseonly=False):
                         word.parent.remove(word)
                     else:
                         word.parent.data[index] = folia.Linebreak(doc)
+                    if len(prevsentence) == 0: #remove empty sentence
+                        prevsentence.parent.remove(prevsentence)
                 else:
                     word.parent.data[index] = folia.Linebreak(doc)
             else:
