@@ -46,7 +46,11 @@ def processfile(filename):
             newline = ""
             strippedline = line.strip()
             if linenum == 0 and strippedline.find('score') != -1:
-                docid = strippedline.split(' ')[0].strip()
+                tmpdocid = strippedline.split(' ')[0].strip()
+                if tmpdocid[0] == 'T':
+                    docid = tmpdocid
+                else:
+                    print("WARNING: DocID could not be read from " + filename +", first line has garbage",file=sys.stderr)
                 score = strippedline.split(' ')[-1][:-1]
                 continue
             if strippedline and strippedline[0] == '(' and strippedline[-1] == ')' and strippedline.find('min') != -1 and strippedline.find('words') != -1:
