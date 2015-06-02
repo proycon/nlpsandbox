@@ -48,6 +48,7 @@ def processfile(filename,parseonly=False):
     hyph = False
     docid = os.path.basename(tmpfilename)
     score = None
+    sentencebreak = False
     begin = 0
     skipchar = 0
 
@@ -58,6 +59,9 @@ def processfile(filename,parseonly=False):
                 hyphbuffer = ""
             newline = ""
             strippedline = line.strip()
+            if not strippedline:
+                #empty line forces sentences break on next output
+                sentencebreak = True
             if linenum == 0 and strippedline.find('score') != -1:
                 tmpdocid = strippedline.split(' ')[0].strip()
                 if tmpdocid[0] == 'T':
@@ -155,7 +159,11 @@ def processfile(filename,parseonly=False):
                     gapbuffer += c
                 elif c != "\r":
                     newline += c
-            if strippedline and newline and not ingap and not incorrection: newline += "%B%"
+            if strippedline and newline and not ingap and not incorrection:
+                if sentencebreak:
+                    newline += "<utt>"
+                    sentencebreak = False
+                newline += "%B%"
             f_out.write(newline)
 
 
