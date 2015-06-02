@@ -69,7 +69,10 @@ def processfile(filename):
                         if hyph:
                             newline += "%B%"
                         newline += "%C" + str(len(corrections)) + "%" #placeholder
-                        originaltext, newtext = correctionbuffer.split('~')
+                        try:
+                            originaltext, newtext = correctionbuffer.split('~')
+                        except ValueError:
+                            raise Exception("Unable to split correctionbuffer in " + filename + ": " + correctionbuffer)
                         if hyph:
                             newtext = newtext.replace('-','')
                         corrections.append( (originaltext, newtext) )
