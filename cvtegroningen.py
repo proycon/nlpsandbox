@@ -46,7 +46,7 @@ def processfile(filename):
             newline = ""
             strippedline = line.strip()
             if linenum == 0 and strippedline.find('score') != -1:
-                docid = strippedline.split(' ')[0]
+                docid = strippedline.split(' ')[0].strip()
                 score = strippedline.split(' ')[-1][:-1]
                 continue
             if strippedline and strippedline[0] == '(' and strippedline[-1] == ')' and strippedline.find('min') != -1 and strippedline.find('words') != -1:
