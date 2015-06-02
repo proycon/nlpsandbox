@@ -9,15 +9,15 @@ import ucto #pylint: disable=import-error
 from pynlpl.formats import folia #pylint: disable=import-error
 
 
-def processdir(dirname):
+def processdir(dirname,parseonly=False):
     for f in os.listdir(dirname):
         f = os.path.join(dirname,f)
         if f.endswith('.txt'):
-            processfile(f)
+            processfile(f,parseonly)
         elif os.path.isdir(f):
-            processdir(f)
+            processdir(f,parseonly)
 
-def processfile(filename):
+def processfile(filename,parseonly=False):
     tmpfilename = filename.replace('.txt','')
     foliafilename = filename.replace('.txt','') + '.folia.xml'
 
@@ -143,7 +143,10 @@ def processfile(filename):
             if strippedline and newline and not ingap and not incorrection: newline += "%B%"
             f_out.write(newline)
 
+
     print("docid: ", docid, file=sys.stderr)
+    if parseonly:
+        return
     tokenizer = ucto.Tokenizer("/home/proycon/lamachine/etc/ucto/tokconfig-nl-withplaceholder",xmloutput=True,docid=docid)
     tokenizer.tokenize(tmpfilename, foliafilename)
     os.unlink(tmpfilename)
@@ -282,7 +285,11 @@ def processfile(filename):
 
 if __name__ == '__main__':
     filename = sys.argv[1]
-    if os.path.isdir(filename):
-        processdir(filename)
+    if len(sys.argv) == 3 and sys.argv[2] == "parseonly":
+        parseonly = True
     else:
-        processfile(filename)
+        parseonly = False
+    if os.path.isdir(filename):
+        processdir(filename,parseonly)
+    else:
+        processfile(filename, parseonly)
