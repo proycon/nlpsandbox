@@ -114,7 +114,6 @@ def processfile(filename,parseonly=False):
                         if nospace and i +1 < len(line) and line[i+1].isalnum():
                             #gap is in the middle of a word
                             ingap = False
-                            newline += "%I" + str(len(inlinegaps)) + "%" #placeholder
                             left = ""
                             for j in range(begin,0,-1):
                                 if line[j].isalpha():
@@ -129,6 +128,7 @@ def processfile(filename,parseonly=False):
                                 else:
                                     break
                             skipchar = len(right)
+                            newline += "%I" + str(len(inlinegaps)) + "%" #placeholder
                             inlinegaps.append((left,gapbuffer,right))
                         else:
                             ingap = False
