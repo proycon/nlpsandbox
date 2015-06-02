@@ -105,7 +105,7 @@ def processfile(filename,parseonly=False):
                     ingap = True
                     gapbuffer = ""
                     if i > 0:
-                        nospace = (line[i-1] == " ")
+                        nospace = (line[i-1] != " ")
                         begin = i-1
                     else:
                         nospace = False
