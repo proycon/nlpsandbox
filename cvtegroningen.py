@@ -262,7 +262,7 @@ def processfile(filename,parseonly=False):
                 index = int(str(word)[2:-1])
                 left, gapcontent, right = inlinegaps[index]
                 word.settext(left + right)
-                gap = folia.TextMarkupGap(doc, gapcontent)
+                gap = folia.TextMarkupGap(doc, gapcontent,cls='cancelled')
                 word.add(folia.TextContent, left, gap, right, cls='original')
                 word.cls = "WORD"
             elif str(word)[1] == "B":
