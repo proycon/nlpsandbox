@@ -233,12 +233,12 @@ def processfile(filename,parseonly=False):
                     correction = word.correct(new=newtext,cls='capitalizationerror')
                     correction.original().settext(originaltext)
                 elif ' ' in originaltext and originaltext.replace(' ','') == newtext:
-                    original = folia.Original(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in originaltext.split(' ') ])
+                    original = folia.Original(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in originaltext.split(' ') if x.strip() ])
                     correction = folia.Correction(doc, original,folia.New(doc, folia.Word(doc, newtext,generate_id_in=word.parent)),cls='spliterror')
                     index = word.parent.getindex(word)
                     word.parent.data[index] = correction
                 elif ' ' in newtext and newtext.replace(' ','') == originaltext:
-                    new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in newtext.split(' ') ])
+                    new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in newtext.split(' ') if x.strip() ])
                     correction = folia.Correction(doc, new,folia.Original(doc, folia.Word(doc, originaltext,generate_id_in=word.parent)),cls='runonerror')
                     index = word.parent.getindex(word)
                     word.parent.data[index] = correction
@@ -261,8 +261,8 @@ def processfile(filename,parseonly=False):
                     correction = folia.Correction(doc, folia.New(doc),folia.Original(doc, folia.Word(doc,originaltext,cls="WORD",generate_id_in=parent) ),cls=cls)
                     parent.data[index] = correction
                 elif ' ' in originaltext or ' ' in newtext:
-                    new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in newtext.split(' ') ])
-                    original = folia.Original(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in originaltext.split(' ') ])
+                    new = folia.New(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in newtext.split(' ') if x.strip() ])
+                    original = folia.Original(doc, *[ folia.Word(doc, x,cls="WORD",generate_id_in=word.parent) for x in originaltext.split(' ') if x.strip()  ])
                     correction = folia.Correction(doc, new, original,cls='uncertain')
                     index = word.parent.getindex(word)
                     word.parent.data[index] = correction
