@@ -295,14 +295,15 @@ def processfile(filename,parseonly=False):
                 index = word.parent.getindex(word)
                 if index == 0:
                     #add to end of previous sentence
+                    currentsentence = word.parent
                     prevsentence = word.parent.previous(folia.Sentence,None)
                     if prevsentence:
                         prevsentence.add(folia.Linebreak)
                         word.parent.remove(word)
                     else:
                         word.parent.data[index] = folia.Linebreak(doc)
-                    if len(prevsentence) == 0: #remove empty sentence
-                        prevsentence.parent.remove(prevsentence)
+                    if currentsentence.count(folia.Word) == 0: #remove empty sentence
+                        currentsentence.parent.remove(currentsentence)
                 else:
                     word.parent.data[index] = folia.Linebreak(doc)
             else:
