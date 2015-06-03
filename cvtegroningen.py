@@ -140,8 +140,12 @@ def processfile(filename,parseonly=False):
                                 else:
                                     break
                             skipchar = len(right)
-                            newline += "%I" + str(len(inlinegaps)) + "%" #placeholder
-                            inlinegaps.append((left,gapbuffer,right))
+                            if left or right:
+                                newline += "%I" + str(len(inlinegaps)) + "%" #placeholder
+                                inlinegaps.append((left,gapbuffer,right))
+                            else:
+                                newline += "%G" + str(len(gaps)) + "%" #placeholder
+                                gaps.append(gapbuffer)
                         else:
                             ingap = False
                             newline += "%G" + str(len(gaps)) + "%" #placeholder
