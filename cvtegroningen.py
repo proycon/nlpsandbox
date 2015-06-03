@@ -273,7 +273,11 @@ def processfile(filename,parseonly=False):
                     word.append(folia.Correction,  folia.Original( doc, folia.TextContent(doc,originaltext)), folia.New(doc, folia.TextContent(doc,newtext)), cls="uncertain")
 
             elif str(word)[1] == "G":
-                index = int(str(word)[2:-1])
+                try:
+                    index = int(str(word)[2:-1])
+                except ValueError:
+                    print("WORD=", str(word),file=sys.stderr)
+                    raise
                 gapcontent = gaps[index]
                 index = word.parent.getindex(word)
                 if all( ( c == '$' for c in gapcontent) ):
