@@ -248,8 +248,9 @@ def processfile(filename,parseonly=False):
                     word.parent.data[index] = correction
                 elif originaltext == "":
                     #insertion
-                    correction = word.correct(new=newtext, cls='missingword')
-                    correction.original().data = []
+                    correction = folia.Correction(doc, folia.Original(doc),folia.New(doc, folia.Word(doc, newtext,cls="WORD",generate_id_in=word.parent)),cls='missingword')
+                    index = word.parent.getindex(word)
+                    word.parent.data[index] = correction
                 elif newtext == "":
                     #deletion
                     if not originaltext.isalnum():
