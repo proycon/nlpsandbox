@@ -11,7 +11,7 @@ class Feeder(Process):
         self.outputqueue = outputqueue
         super().__init__()
 
-        for i in range(0,1000):
+        for i in range(0,50000):
             self.inputqueue.put(random.randint(1,1000) )
 
         for i in range(0,threads):
