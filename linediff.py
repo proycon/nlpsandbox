@@ -1,14 +1,15 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf8 -*-
+
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import getopt
 import sys
-import codecs
 
 def usage():
-    print >> sys.stderr, "Syntax:  linediff.py files"
-    print >> sys.stderr, "Options:"
-    print >> sys.stderr, "-e [input encoding]                 - Encoding of input files (utf-8 by default)"
+    print("Syntax:  linediff.py files", file=sys.stderr)
+    print("Options:", file=sys.stderr)
+    print("-e [input encoding]                 - Encoding of input files (utf-8 by default)", file=sys.stderr)
 
 def bold(s):
    CSI="\x1B["
@@ -46,8 +47,8 @@ ENCODING = 'utf-8'
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "e:")
-except getopt.GetoptError, err:
-    print str(err)
+except getopt.GetoptError as err:
+    print(err, file=sys.stderr)
     usage()
     sys.exit(2)
 
@@ -61,7 +62,7 @@ files = args
 
 f = []
 for filename in files:
-    f.append(codecs.open(filename,'r','utf-8') )
+    f.append(open(filename,'r',encoding='utf-8') )
 
 done = False
 linenum = 0
@@ -92,32 +93,32 @@ while not done:
         matches += 1
     else:
         differences += 1
-        print bold("@" + str(linenum) + ":")
+        print(bold("@" + str(linenum) + ":"))
 
 
         for i, line in enumerate(lines):
             line = line.strip()
-            print " #" + str(i) +": ",
+            print(" #" + str(i) +": ",end="")
             if i == 0:
                 reftokens = line.split(' ')
-                print line.encode('utf-8')
+                print(line.encode('utf-8'))
             else:
                 #highlight differences
                 tokens = line.split(' ')
                 for j, (reftoken, token) in enumerate(zip(reftokens, tokens)):
                     if token == reftoken:
-                        print green(token).encode('utf-8'),
+                        print(green(token).encode('utf-8'), end="")
                     elif (j > 0 and token == reftokens[j-1]) or (j < len(reftokens) -1 and token == reftokens[j+1]):
-                        print white(token).encode('utf-8'),
+                        print(white(token).encode('utf-8'), end="")
                     elif token in reftokens:
-                        print yellow(token).encode('utf-8'),
+                        print(yellow(token).encode('utf-8'),end="")
                     else:
-                        print red(token).encode('utf-8'),
-                print
+                        print(red(token).encode('utf-8'), end="")
+                print()
 
-print >>sys.stderr, "Total lines: ", linenum - 1
-print >>sys.stderr, "Matches: ", matches, str(matches / float(linenum - 1) * 100) + str('%')
-print >>sys.stderr, "Differences: ", differences, str(differences / float(linenum - 1) * 100) + str('%')
+print("Total lines: ", linenum - 1, file=sys.stderr)
+print("Matches: ", matches, str(matches / float(linenum - 1) * 100) + str('%'), file=sys.stderr)
+print("Differences: ", differences, str(differences / float(linenum - 1) * 100) + str('%'), file=sys.stderr)
 
 
 
