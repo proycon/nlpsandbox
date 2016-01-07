@@ -101,19 +101,19 @@ while not done:
             print(" #" + str(i) +": ",end="")
             if i == 0:
                 reftokens = line.split(' ')
-                print(line.encode('utf-8'))
+                print(line)
             else:
                 #highlight differences
                 tokens = line.split(' ')
                 for j, (reftoken, token) in enumerate(zip(reftokens, tokens)):
                     if token == reftoken:
-                        print(green(token).encode('utf-8'), end="")
+                        print(green(token), end=" ")
                     elif (j > 0 and token == reftokens[j-1]) or (j < len(reftokens) -1 and token == reftokens[j+1]):
-                        print(white(token).encode('utf-8'), end="")
+                        print(white(token), end=" ")
                     elif token in reftokens:
-                        print(yellow(token).encode('utf-8'),end="")
+                        print(yellow(token),end=" ")
                     else:
-                        print(red(token).encode('utf-8'), end="")
+                        print(red(token), end=" ")
                 print()
 
 print("Total lines: ", linenum - 1, file=sys.stderr)

@@ -3,6 +3,7 @@
 import sys
 from multiprocessing import Process, JoinableQueue as Queue
 import time
+import datetime
 import random
 
 class Feeder(Process):
@@ -48,7 +49,10 @@ class Processor(Process):
                 print("inputqueue end")
                 break
             else:
-                self.outputqueue.put( self.compute(n))
+                print(datetime.datetime.now().strftime("%H:%M:%S.%f") + " - BEGIN " + str(self.pid),file=sys.stderr)
+                n = self.compute(n)
+                self.outputqueue.put(n)
+                print(datetime.datetime.now().strftime("%H:%M:%S.%f") + " - END   " + str(self.pid),file=sys.stderr)
 
 
 if __name__ == '__main__':
