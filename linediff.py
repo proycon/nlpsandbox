@@ -114,6 +114,12 @@ while not done:
                         print(yellow(token),end=" ")
                     else:
                         print(red(token), end=" ")
+                if len(tokens) > len(reftokens):
+                    for token in tokens[len(reftokens):]:
+                        if token in reftokens:
+                            print(yellow(token),end=" ")
+                        else:
+                            print(red(token), end=" ")
                 print()
 
 print("Total lines: ", linenum - 1, file=sys.stderr)
