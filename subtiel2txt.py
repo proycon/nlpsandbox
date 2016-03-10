@@ -13,12 +13,12 @@ outfiles  = {
         'eng': open('eng.txt','w',encoding='utf-8')
 }
 
-for i, doc in enumerate(folia.Corpus(corpusdir, 'xml.gz','', lambda fn: os.path.basename(fn).startswith('S-OP_') )):
+for i, doc in enumerate(folia.Corpus(corpusdir, 'xml.gz','', lambda fn: os.path.basename(fn).startswith('S-OP_') ,ignoreerrors=True)):
     print("Processing #" + str(i) + ": " + doc.filename ,file=sys.stderr)
     for ca in doc.select(folia.ComplexAlignment):
         sentencepair = {}
         for a in ca.select(folia.Alignment):
-            sentencepair[a.cls] = " ".join([ aref.t for aref in a.select(folia.AlignReference)])
+            sentencepair[a.cls] = " ".join([ aref.t for aref in a.select(folia.AlignReference,ignore=False)])
         if all([lang in sentencepair for lang in langs]):
             for lang, text in sentencepair.items():
                 outfiles[lang].write(text+"\n")
