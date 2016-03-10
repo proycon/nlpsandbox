@@ -21,10 +21,10 @@ for i, doc in enumerate(folia.Corpus(corpusdir, 'xml.gz','', lambda fn: os.path.
             sentencepair[a.cls] = " ".join([ aref.t for aref in a.select(folia.AlignReference,ignore=False)])
         if all([lang in sentencepair for lang in langs]):
             if any([ not text.strip() for text in sentencepair.values()]):
-                print("  WARNING: Empty text", text,file=sys.stderr)
+                print("  WARNING: Empty text", sentencepair,file=sys.stderr)
                 continue
             if any([ '\n' in text for text in sentencepair.values()]):
-                print("  WARNING: Newline in text: ", text,file=sys.stderr)
+                print("  WARNING: Newline in text: ", sentencepair,file=sys.stderr)
                 continue
             for lang, text in sentencepair.items():
                 outfiles[lang].write(text+"\n")
