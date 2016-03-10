@@ -11,8 +11,8 @@ outfiles  = {
         'eng': open('eng.txt','w',encoding='utf-8')
 }
 
-for doc in folia.Corpus(corpusdir, 'xml.gz','', lambda fn: fn.startswith('S-OP_') ):
-    print("Processing ", doc.filename ,file=sys.stderr)
+for i, doc in enumerate(folia.Corpus(corpusdir, 'xml.gz','', lambda fn: fn.startswith('S-OP_') )):
+    print("Processing #" + str(i) + ": " + doc.filename ,file=sys.stderr)
     for ca in doc.select(folia.ComplexAlignment):
         sentencepair = {}
         for a in ca.select(folia.Alignment):
