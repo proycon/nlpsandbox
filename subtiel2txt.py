@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import os
+import sys
 from pynlpl.formats import folia
 
-corpusdir = ''
+corpusdir = '.'
 
 langs = ('nld','eng')
 
@@ -11,13 +13,13 @@ outfiles  = {
         'eng': open('eng.txt','w',encoding='utf-8')
 }
 
-for i, doc in enumerate(folia.Corpus(corpusdir, 'xml.gz','', lambda fn: fn.startswith('S-OP_') )):
+for i, doc in enumerate(folia.Corpus(corpusdir, 'xml.gz','', lambda fn: os.path.basename(fn).startswith('S-OP_') )):
     print("Processing #" + str(i) + ": " + doc.filename ,file=sys.stderr)
     for ca in doc.select(folia.ComplexAlignment):
         sentencepair = {}
         for a in ca.select(folia.Alignment):
             sentencepair[a.cls] = " ".join([ aref.t for aref in a.select(folia.AlignReference)])
-        if all([lang in sentencepairs for lang in langs]):
+        if all([lang in sentencepair for lang in langs]):
             for lang, text in sentencepair.items():
                 outfiles[lang].write(text+"\n")
         else:
