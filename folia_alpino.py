@@ -40,31 +40,33 @@ def alpino_parse(sent, host='localhost', port=4343):
     return "".join(total_xml)
 
 
-def process_dir(d, extension, outputdir):
+def process_dir(d, extension, outputdir, basedir, useprefix):
     print("Processing directory " + d,file=sys.stderr)
     for f in glob.glob(os.path.join(d,'*')):
         if os.path.isdir(f) and f not in ('.','..'):
-            process_dir(f)
+            process_dir(f, extension, outputdir, basedir, useprefix)
         elif f.endswith(extension):
-            for doc in folia.Corpus(filename,extension=extension,ignoreerrors=True):
-                process_folia(doc, args.outputdir)
+            print("Processing file " + f,file=sys.stderr)
+            doc = folia.Document(file=f)
+            process_folia(doc, outputdir, f.replace(basedir,"").replace("/","_") + "-" if useprefix else "")
 
-def process_folia(doc, outputdir):
-    print("Processing FoLiA Document " + doc.id,file=sys.stderr)
+def process_folia(doc, outputdir, outputprefix=""):
     for sentence in doc.sentences():
-        with open(os.path.join(outputdir, sentence.id + '.alpino.xml'),'w',encoding='utf-8') as f:
+        print("\tWriting " + outputprefix + sentence.id + '.alpino.xml',file=sys.stderr)
+        with open(os.path.join(outputdir, outputprefix + sentence.id + '.alpino.xml'),'w',encoding='utf-8') as f:
             f.write(alpino_parse(sentence.text()))
 
 def main():
     parser = argparse.ArgumentParser(description="Parse FoLiA documents with Alpino", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-E','--extension', type=str,help="", action='store',default="xml",required=False)
     parser.add_argument('-o','--outputdir', type=str,help="", action='store',default=".",required=False)
+    parser.add_argument('--fileid', help="Use filename in ID (needed if FoLiA ID's are not unique)", action='store_true',required=False)
     parser.add_argument('inputfiles', nargs='+', help='Input file or directory')
     args = parser.parse_args()
 
     for filename in args.inputfiles:
         if os.path.isdir(filename):
-            process_dir(filename, args.extension, args.outputdir)
+            process_dir(filename, args.extension, args.outputdir, filename, args.fileid)
         else:
             print("Processing file " + filename,file=sys.stderr)
             doc = folia.Document(file=filename)
