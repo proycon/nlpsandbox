@@ -47,7 +47,11 @@ def process_dir(d, extension, outputdir, basedir, useprefix):
             process_dir(f, extension, outputdir, basedir, useprefix)
         elif f.endswith(extension):
             print("Processing file " + f,file=sys.stderr)
-            doc = folia.Document(file=f)
+            try:
+                doc = folia.Document(file=f)
+            except Exception as e:
+                print("PARSING ERROR: ", str(e),file=sys.stderr)
+                continue
             process_folia(doc, outputdir, f.replace(basedir,"").replace("/","_") + "-" if useprefix else "")
 
 def process_folia(doc, outputdir, outputprefix=""):
