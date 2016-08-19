@@ -39,6 +39,15 @@ def alpino_parse(sent, host='localhost', port=4343):
     return "".join(total_xml)
 
 
+def process_dir(d, extension, outputdir):
+    print("Processing directory " + d,file=sys.stderr)
+    for f in glob.glob(os.path.join(d,'*')):
+        if os.path.isdir(f) and f not in ('.','..'):
+            process_dir(f)
+        elif f.endswith(extension):
+            for doc in folia.Corpus(filename,extension=extension,ignoreerrors=True):
+                process_folia(doc, args.outputdir)
+
 def process_folia(doc, outputdir):
     print("Processing FoLiA Document " + doc.id,file=sys.stderr)
     for sentence in doc.sentences():
@@ -53,11 +62,10 @@ def main():
     args = parser.parse_args()
 
     for filename in args.inputfiles:
-        print("Processing file " + filename,file=sys.stderr)
         if os.path.isdir(filename):
-            for doc in folia.Corpus(filename,extension=args.extension,ignoreerrors=True):
-                process_folia(doc, args.outputdir)
+            process_dir(filename, args.extension, args.outputdir)
         else:
+            print("Processing file " + filename,file=sys.stderr)
             doc = folia.Document(file=filename)
             process_folia(doc, args.outputdir)
 
