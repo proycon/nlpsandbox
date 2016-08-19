@@ -1,7 +1,8 @@
-##!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import socket
 import argparse
+import os
 from pynlpl.formats import folia
 
 #start an alpino server as follows:
@@ -39,7 +40,7 @@ def alpino_parse(sent, host='localhost', port=4343):
 
 def process_folia(doc, outputdir):
     for sentence in doc.sentences():
-        with open(os.path.join(outputdir, sentence.id + '.alpino.xml','wb')) as f:
+        with open(os.path.join(outputdir, sentence.id + '.alpino.xml'),'w',encoding='utf-8') as f:
             f.write(alpino_parse(sentence.text()))
 
 def main():
