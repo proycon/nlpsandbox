@@ -4,6 +4,7 @@ import socket
 import argparse
 import os
 import sys
+import glob
 from pynlpl.formats import folia
 
 #start an alpino server as follows:
