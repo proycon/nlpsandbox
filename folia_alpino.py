@@ -32,7 +32,7 @@ def alpino_parse(sent, host='localhost', port=4343):
     s.sendall(sent.encode('utf-8'))
     total_xml=[]
     while True:
-        xml = s.recv(8192)
+        xml = s.recv(98192)
         if not xml:
             break
         total_xml.append(str(xml,encoding='utf8'))
@@ -58,7 +58,10 @@ def process_folia(doc, outputdir, outputprefix=""):
     for sentence in doc.sentences():
         print("\tWriting " + outputprefix + sentence.id + '.alpino.xml',file=sys.stderr)
         with open(os.path.join(outputdir, outputprefix + sentence.id + '.alpino.xml'),'w',encoding='utf-8') as f:
-            f.write(alpino_parse(sentence.text()))
+            try:
+                f.write(alpino_parse(sentence.text()))
+            except Exception as e:
+                print("WRITING ERROR: ", str(e),file=sys.stderr)
 
 def main():
     parser = argparse.ArgumentParser(description="Parse FoLiA documents with Alpino", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
