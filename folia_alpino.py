@@ -77,12 +77,11 @@ def main():
     parser.add_argument('inputfiles', nargs='+', help='Input file or directory')
     args = parser.parse_args()
 
+    skiplist = []
     if args.skiplist:
         with open(args.skiplist,'r',encoding='utf-8') as f:
             for line in f:
                 skiplist.append(line.strip())
-    else:
-        skiplist = []
 
     log_f = open(args.skiplist,'a',encoding='utf-8')
 
