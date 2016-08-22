@@ -40,19 +40,24 @@ def alpino_parse(sent, host='localhost', port=4343):
     return "".join(total_xml)
 
 
-def process_dir(d, extension, outputdir, basedir, useprefix):
+def process_dir(d, extension, outputdir, basedir, useprefix, skiplist, log_f):
     print("Processing directory " + d,file=sys.stderr)
     for f in glob.glob(os.path.join(d,'*')):
         if os.path.isdir(f) and f not in ('.','..'):
-            process_dir(f, extension, outputdir, basedir, useprefix)
+            process_dir(f, extension, outputdir, basedir, useprefix, skiplist, log_f)
         elif f.endswith(extension):
-            print("Processing file " + f,file=sys.stderr)
-            try:
-                doc = folia.Document(file=f)
-            except Exception as e:
-                print("PARSING ERROR: ", str(e),file=sys.stderr)
-                continue
-            process_folia(doc, outputdir, f.replace(basedir,"").replace("/","_") + "-" if useprefix else "")
+            if f in skiplist:
+                print("Skipping file " + f,file=sys.stderr)
+            else:
+                print("Processing file " + f,file=sys.stderr)
+                try:
+                    doc = folia.Document(file=f)
+                except Exception as e:
+                    print("PARSING ERROR: ", str(e),file=sys.stderr)
+                    continue
+                process_folia(doc, outputdir, f.replace(basedir,"").replace("/","_") + "-" if useprefix else "")
+                if log_f:
+                    log_f.write(f+"\n")
 
 def process_folia(doc, outputdir, outputprefix=""):
     for sentence in doc.sentences():
@@ -68,16 +73,28 @@ def main():
     parser.add_argument('-E','--extension', type=str,help="", action='store',default="xml",required=False)
     parser.add_argument('-o','--outputdir', type=str,help="", action='store',default=".",required=False)
     parser.add_argument('--fileid', help="Use filename in ID (needed if FoLiA ID's are not unique)", action='store_true',required=False)
+    parser.add_argument('--skiplist',type=str,help="skip files in this file and append processed files", action="store", required=False)
     parser.add_argument('inputfiles', nargs='+', help='Input file or directory')
     args = parser.parse_args()
 
+    if args.skiplist:
+        with open(args.skiplist,'r',encoding='utf-8') as f:
+            for line in f:
+                skiplist.append(line.strip())
+    else:
+        skiplist = []
+
+    log_f = open(args.skiplist,'a',encoding='utf-8')
+
     for filename in args.inputfiles:
         if os.path.isdir(filename):
-            process_dir(filename, args.extension, args.outputdir, filename, args.fileid)
+            process_dir(filename, args.extension, args.outputdir, filename, args.fileid, skiplist, log_f)
         else:
             print("Processing file " + filename,file=sys.stderr)
             doc = folia.Document(file=filename)
             process_folia(doc, args.outputdir)
+
+    log_f.close()
 
 if __name__ == '__main__':
     main()
