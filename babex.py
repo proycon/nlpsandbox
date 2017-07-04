@@ -10,7 +10,10 @@ for filename in sys.argv[1:]:
             line = line.strip()
             if line and not (line[0] == "<" and line[-1] == ">"):
                 fields = line.split('\t')
-                if len(fields) != 3:
+                if len(fields) == 2:
+                    if all( ( not c.isalnum() for c in  fields[0] ) ):
+                        data.append( (fields[0], 'PUNCT', fields[0]) )
+                elif len(fields) != 3:
                     print("WARNING: Unexpected column layout:", fields,file=sys.stderr)
                 else:
                     text, pos, lemma = fields
@@ -39,10 +42,11 @@ for filename in sys.argv[1:]:
         print(text + "\t" + lemma + "\t" +  pos)
         if text in ('.','?','!'):
             #decide if this is an end-of-sentence
-            if i == len(data):
+            if i == len(data) - 1:
                 eos = True
             else:
-                eos = text[i+1][0].isupper()
+                nexttext = data[i+1][0]
+                eos = nexttext[0].isupper()
                 begin = i+1
             if eos:
                 print("<utt>")
