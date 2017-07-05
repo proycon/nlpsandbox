@@ -36,6 +36,9 @@ for filename in sys.argv[1:]:
 
     begin = 0
     for i, (text,pos, lemma) in enumerate(data):
+        if '_' in lemma: lemma = lemma.replace(' ','_')
+        if '_' in pos: pos = pos.replace(' ','_')
+        if '_' in text: text = text.replace(' ','_')
         print(text + "\t" + lemma + "\t" +  pos)
         if text in ('.','?','!'):
             #decide if this is an end-of-sentence
