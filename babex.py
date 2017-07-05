@@ -17,6 +17,7 @@ for filename in sys.argv[1:]:
                     print("WARNING: Unexpected column layout:", fields,file=sys.stderr)
                 else:
                     text, pos, lemma = fields
+                    if all( (c.isdigit() for c in text )): lemma = text
                     cutoff = 0
                     for i, c in enumerate(reversed(text)):
                         if c.isalnum():
@@ -36,17 +37,17 @@ for filename in sys.argv[1:]:
                         data.append( (punct,"PUNC",punct) )
                     else:
                         data.append( (text,pos,lemma) )
-
     begin = 0
     for i, (text,pos, lemma) in enumerate(data):
         print(text + "\t" + lemma + "\t" +  pos)
-        if text in ('.','?','!'):
+        if i == len(data) - 1:
+            eos = True
+        elif text in ('.','?','!'):
             #decide if this is an end-of-sentence
-            if i == len(data) - 1:
-                eos = True
-            else:
-                nexttext = data[i+1][0]
-                eos = nexttext[0].isupper()
-                begin = i+1
-            if eos:
-                print("<utt>")
+            nexttext = data[i+1][0]
+            eos = nexttext[0].isupper()
+            begin = i+1
+        else:
+            eos = False
+        if eos:
+            print("<utt>")
