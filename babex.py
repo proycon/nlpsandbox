@@ -39,6 +39,9 @@ for filename in sys.argv[1:]:
                         data.append( (text,pos,lemma) )
     begin = 0
     for i, (text,pos, lemma) in enumerate(data):
+        if '_' in lemma: lemma = lemma.replace(' ','_')
+        if '_' in pos: pos = pos.replace(' ','_')
+        if '_' in text: text = text.replace(' ','_')
         print(text + "\t" + lemma + "\t" +  pos)
         if i == len(data) - 1:
             eos = True
