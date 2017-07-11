@@ -55,6 +55,8 @@ for filename in sys.argv[1:]:
         if ' ' in lemma: lemma = lemma.replace(' ','_')
         if ' ' in pos: pos = pos.replace(' ','_')
         if ' ' in text: text = text.replace(' ','_')
+        if not (text and pos and lemma):
+            continue
         print(text + "\t" + lemma + "\t" +  pos)
         if i == len(data) - 1:
             eos = True
