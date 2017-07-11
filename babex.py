@@ -1,29 +1,35 @@
 #!/usr/bin/env python3
 
+import lxml.etree
 import sys
+for element in doc:
+    #element.tag, element.attrib['blah'], element.text
+    pass
+for element in doc.xpath("//test"):
+    pass
+
+ns = {'tei':"http://www.tei-c.org/ns/1.0"}
 
 # Brieven als buit extractor
 for filename in sys.argv[1:]:
     data = []
     with open(filename, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not (line[0] == "<" and line[-1] == ">"):
-                fields = line.split('\t')
-                if len(fields) != 3:
-                    print("WARNING: Unexpected column layout:", fields,file=sys.stderr)
+        doc = lxml.etree.parse(filename).getroot()
+        for word in doc.xpath("//tei:w",namespaces=ns):
+            text = word.text
+            pos = word.attrib['type']
+            lemma = word.attrib['lemma']
+            if pos != 'UNRESOLVED' and lemma != 'UNRESOLVED' and word.attrib['xtype'] != 'multiw':
+                for i, c in enumerate(reversed(text)):
+                    if c.isalnum():
+                        cutoff = -1 * i
+                if cutoff != 0:
+                    punct = text[cutoff:]
+                    text = text[:cutoff]
+                    data.append( (text,pos,lemma) )
+                    data.append( (punct,"PUNC",punct) )
                 else:
-                    text, pos, lemma = fields
-                    for i, c in enumerate(reversed(text)):
-                        if c.isalnum():
-                            cutoff = -1 * i
-                    if cutoff != 0:
-                        punct = text[cutoff:]
-                        text = text[:cutoff]
-                        data.append( (text,pos,lemma) )
-                        data.append( (punct,"PUNC",punct) )
-                    else:
-                        data.append( (text,pos,lemma) )
+                    data.append( (text,pos,lemma) )
 
     begin = i
     for i, (text,pos, lemma) in enumerate(data):
