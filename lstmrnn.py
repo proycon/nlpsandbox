@@ -93,8 +93,8 @@ if __name__ == '__main__':
         model = init_lstm_model(X, y, sys.argv[2])
         seed_seq = get_seed_seq(raw_text, vocab)
         print("Seed: ", "".join([vocab_reverse[c] for c in seed_seq]))
-        generated_seq = generate(seed_seq, vocab_reverse, vocabsize, 1000)
-        print("Generated: ", "".join(generated_seq))
+        print("Generating: ")
+        generate(seed_seq, vocab_reverse, vocabsize, 1000)
 
 
 
