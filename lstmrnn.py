@@ -33,12 +33,13 @@ def get_train_seqs(raw_text, vocab, vocabsize, seq_length=100):
     return X, y
 
 def get_seed_seq(raw_text, vocab, seq_length=100):
-    i = numpy.random.randint(0, len(raw_text) - seq_length)
-    seq_in = raw_text[i:i + seq_length]
+    start = numpy.random.randint(0, len(raw_text) - seq_length - 1 )
+    end = start+ seq_length
+    seq_in = raw_text[start:end]
     return [vocab[char] for char in seq_in]
 
 
-def init_lstm_model(load_weights_filename=None):
+def init_lstm_model(X, y, load_weights_filename=None):
     model = Sequential()
     model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2]))) #256 memory units
     model.add(Dropout(0.2)) #dropout probability
@@ -49,7 +50,7 @@ def init_lstm_model(load_weights_filename=None):
     return model
 
 def train_lstm(X,y, epochs=20, batch_size=128):
-    model = init_lstm_model()
+    model = init_lstm_model(X, y)
 
     filepath="weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
     checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
@@ -89,9 +90,9 @@ if __name__ == '__main__':
     elif len(sys.argv) == 3:
         print("Generating...",file=sys.stderr)
 
-        model = init_lstm_model(sys.argv[2])
-        seed_seq = get_seed_seq(raw_text, vocab, vocabsize)
-        print("Seed: ", "".join(seed_seq))
+        model = init_lstm_model(X, y, sys.argv[2])
+        seed_seq = get_seed_seq(raw_text, vocab)
+        print("Seed: ", "".join([vocab_reverse[c] for c in seed_seq]))
         generated_seq = generate(seed_seq, vocab_reverse, vocabsize, 1000)
         print("Generated: ", "".join(generated_seq))
 
