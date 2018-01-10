@@ -15,6 +15,10 @@ for i, file in enumerate(glob.glob(pattern)):
     if (i+1) % size == 0:
         batch += 1
         os.mkdir(str(batch))
-    copyfile(file, str(batch) + "/" + os.path.basename(file))
+    print(i+1,batch,file,file=sys.stderr)
+    if os.path.islink(file):
+        os.symlink(os.readlink(file), str(batch) + "/" + os.path.basename(file))
+    else:
+        copyfile(file, str(batch) + "/" + os.path.basename(file))
 
 
