@@ -11,10 +11,10 @@ for filename in sys.argv[1:]:
             if line.strip().startswith("<t-"):
                 if found == i-1:
                     batchlines.append(i)
-                else:
-                    batchlines = []
+                elif batchlines:
                     mergelines.append(batchlines)
+                    batchlines = []
                 found = i
 
 for lines in mergelines:
-    print([ str(i+1) for i in mergelines],file=sys.stderr)
+    print([ str(i+1) for i in lines],file=sys.stderr)
