@@ -11,7 +11,7 @@ for filename in sys.argv[1:]:
             if line.strip().startswith("<t-"):
                 if found == i-1:
                     batchlines.append(i)
-                elif batchlines:
+                elif len(batchlines) > 1:
                     mergelines[batchlines[0]] = batchlines[1:]
                     print([ str(i+1) for i in batchlines],file=sys.stderr)
                     batchlines = []
