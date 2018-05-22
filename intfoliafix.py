@@ -17,4 +17,4 @@ for filename in sys.argv[1:]:
                 found = i
 
 for lines in mergelines:
-    print([ str(i+1) for i in mergelines],file=sys.stderr)
+    print([ str(i+1) for i in lines],file=sys.stderr)

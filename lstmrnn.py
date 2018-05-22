@@ -49,7 +49,7 @@ def init_lstm_model(X, y, load_weights_filename=None):
     model.compile(loss='categorical_crossentropy', optimizer='adam')
     return model
 
-def train_lstm(X,y, epochs=20, batch_size=128):
+def train_lstm(X,y, epochs=50, batch_size=128):
     model = init_lstm_model(X, y)
 
     filepath="weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
