@@ -18,7 +18,7 @@ for filename in sys.argv[1:]:
                 found = i
 
     with open(filename,'r',encoding='utf-8') as f_in:
-        with open(filename+'.fixed','r',encoding='utf-8') as f_out:
+        with open(filename+'.fixed','w',encoding='utf-8') as f_out:
             buffer = None
             until = i
             for i, line in enumerate(f):
