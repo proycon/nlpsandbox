@@ -21,7 +21,7 @@ for filename in sys.argv[1:]:
         with open(filename+'.fixed','w',encoding='utf-8') as f_out:
             buffer = None
             until = i
-            for i, line in enumerate(f):
+            for i, line in enumerate(f_in):
                 if i in mergelines:
                     buffer = line.strip()
                     until = mergelines[i][-1]
