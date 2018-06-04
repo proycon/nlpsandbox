@@ -13,6 +13,6 @@ for filename in sys.argv[1:]:
     data = []
     with open(filename,'r',encoding='utf-8') as f:
         for i, line in enumerate(f):
-            data.append({'id': str(i+1), 'caption': line.strip()})
-    with open(filename.replace('.txt','') + '.json','wb') as f:
+            data.append({'image_id': str(i+1), 'caption': line.strip()})
+    with open(filename.replace('.txt','') + '.json','w',encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False)

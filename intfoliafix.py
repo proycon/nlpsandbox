@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 
@@ -11,9 +11,10 @@ for filename in sys.argv[1:]:
             if line.strip().startswith("<t-"):
                 if found == i-1:
                     batchlines.append(i)
-                elif len(batchlines) > 1:
-                    mergelines[batchlines[0]] = batchlines[1:]
-                    print([ str(i+1) for i in batchlines],file=sys.stderr)
+                else:
+                    if len(batchlines) > 1:
+                        mergelines[batchlines[0]] = batchlines[1:]
+                        print([ str(i+1) for i in batchlines],file=sys.stderr)
                     batchlines = []
                 found = i
 
@@ -30,6 +31,6 @@ for filename in sys.argv[1:]:
                     print(buffer, file=f_out)
                     buffer = None
                 else:
-                    print(line, file=f_out)
+                    print(line,end="", file=f_out)
 
 
