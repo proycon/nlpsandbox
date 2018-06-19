@@ -48,7 +48,7 @@ for filename in sys.argv[1:]:
                                 if homogenous:
                                     punct = punct[0]
                             data.append( (text,pos,lemma) )
-                            data.append( (punct,"PUNC",punct) )
+                            data.append( (punct,"LET()",punct) )
                         else:
                             data.append( (text,pos,lemma) )
 
