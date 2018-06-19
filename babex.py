@@ -25,6 +25,7 @@ for filename in sys.argv[1:]:
                         print("WARNING: word has no pos: ",  lxml.etree.tostring(word),file=sys.stderr)
                         continue
                     pos = word.attrib['pos']
+                    if pos[-1] != ')': pos += '()'
                     if 'lemma' not in word.attrib:
                         print("WARNING: word has no lemma: " , lxml.etree.tostring(word),file=sys.stderr)
                         continue
