@@ -15,7 +15,7 @@ for filename in sys.argv[1:]:
             for word in par.xpath("./*",namespaces=ns):
                 if word.tag == "{http://www.tei-c.org/ns/1.0}pc":
                     text = "".join(word.xpath(".//text()")).replace("\n","")
-                    data.append( (text,'PUNC',text) )
+                    data.append( (text,'LET()',text) )
                 elif word.tag == "{http://www.tei-c.org/ns/1.0}w":
                     text = "".join(word.xpath(".//text()")).replace("\n","")
                     if not text:
