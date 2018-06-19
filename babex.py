@@ -11,7 +11,7 @@ for filename in sys.argv[1:]:
     with open(filename, 'r', encoding='utf-8') as f:
         print("Processing " + filename,file=sys.stderr)
         doc = lxml.etree.parse(filename).getroot()
-        for par in doc.xpath("//(tei:p|tei:s)",namespaces=ns):
+        for par in doc.xpath("//tei:s",namespaces=ns):
             for word in par.xpath("./*",namespaces=ns):
                 if word.tag == "{http://www.tei-c.org/ns/1.0}pc":
                     text = "".join(word.xpath(".//text()")).replace("\n","")
