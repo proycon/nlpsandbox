@@ -21,16 +21,16 @@ for filename in sys.argv[1:]:
                     if not text:
                         print("WARNING: word has no text: " , lxml.etree.tostring(word), file=sys.stderr)
                         continue
-                    if 'type' not in word.attrib:
+                    if 'pos' not in word.attrib:
                         print("WARNING: word has no pos: ",  lxml.etree.tostring(word),file=sys.stderr)
                         continue
-                    pos = word.attrib['type']
+                    pos = word.attrib['pos']
                     if 'lemma' not in word.attrib:
                         print("WARNING: word has no lemma: " , lxml.etree.tostring(word),file=sys.stderr)
                         continue
                     lemma = word.attrib['lemma']
                     if all( (c.isdigit() for c in text )): lemma = text
-                    if pos != 'UNRESOLVED' and lemma != 'UNRESOLVED' and ('xtype' not in word.attrib or word.attrib['xtype'] != 'multiw'):
+                    if pos != 'UNRESOLVED' and lemma != 'UNRESOLVED' and ('part' not in word.attrib):
                         cutoff = 0
                         for i, c in enumerate(reversed(text)):
                             if c.isalnum():
