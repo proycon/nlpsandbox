@@ -9,27 +9,29 @@ ns = {'tei':"http://www.tei-c.org/ns/1.0"}
 for filename in sys.argv[1:]:
     data = []
     with open(filename, 'r', encoding='utf-8') as f:
+        print("Processing " + filename,file=sys.stderr)
         doc = lxml.etree.parse(filename).getroot()
-        for par in doc.xpath("//tei:p",namespaces=ns):
+        for par in doc.xpath("//tei:s",namespaces=ns):
             for word in par.xpath("./*",namespaces=ns):
                 if word.tag == "{http://www.tei-c.org/ns/1.0}pc":
                     text = "".join(word.xpath(".//text()")).replace("\n","")
-                    data.append( (text,'PUNC',text) )
+                    data.append( (text,'LET()',text) )
                 elif word.tag == "{http://www.tei-c.org/ns/1.0}w":
                     text = "".join(word.xpath(".//text()")).replace("\n","")
                     if not text:
                         print("WARNING: word has no text: " , lxml.etree.tostring(word), file=sys.stderr)
                         continue
-                    if 'type' not in word.attrib:
+                    if 'pos' not in word.attrib or not word.attrib['pos']:
                         print("WARNING: word has no pos: ",  lxml.etree.tostring(word),file=sys.stderr)
                         continue
-                    pos = word.attrib['type']
-                    if 'lemma' not in word.attrib:
+                    pos = word.attrib['pos']
+                    if pos[-1] != ')': pos += '()'
+                    if 'lemma' not in word.attrib or not word.attrib['lemma']:
                         print("WARNING: word has no lemma: " , lxml.etree.tostring(word),file=sys.stderr)
                         continue
                     lemma = word.attrib['lemma']
                     if all( (c.isdigit() for c in text )): lemma = text
-                    if pos != 'UNRESOLVED' and lemma != 'UNRESOLVED' and ('xtype' not in word.attrib or word.attrib['xtype'] != 'multiw'):
+                    if pos != 'UNRESOLVED' and lemma != 'UNRESOLVED' and ('part' not in word.attrib):
                         cutoff = 0
                         for i, c in enumerate(reversed(text)):
                             if c.isalnum():
@@ -46,7 +48,7 @@ for filename in sys.argv[1:]:
                                 if homogenous:
                                     punct = punct[0]
                             data.append( (text,pos,lemma) )
-                            data.append( (punct,"PUNC",punct) )
+                            data.append( (punct,"LET()",punct) )
                         else:
                             data.append( (text,pos,lemma) )
 
