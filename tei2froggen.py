@@ -3,17 +3,17 @@
 #optimised for CRM/Corpus Gysseling
 #See also babex.py (Brieven als buit)!
 
+from __future__ import print_function, unicode_literals, division, absolute_import
 import sys
 import lxml.etree
 
 
 ns = {"tei": "http://www.tei-c.org/ns/1.0"}
-
 eos = True
 for filename in sys.argv[1:]:
     print("Processing " + filename,file=sys.stderr)
     doc = lxml.etree.parse(filename).getroot()
-    for teidoc in doc.xpath("//TEI", namespaces=ns): #in case input contains multiple docs
+    for teidoc in doc.xpath("//tei:TEI", namespaces=ns): #in case input contains multiple docs
         for word in teidoc.xpath("//tei:w", namespaces=ns):
             eos = False
             text = "".join(word.itertext()).strip()
@@ -25,7 +25,7 @@ for filename in sys.argv[1:]:
                 if text:
                     if ' ' in text:
                         print("Removing space in word: ",  text, file=sys.stderr)
-                        text = text.replace(' ','')
+                        text = text.replace(' ','⊔') #seems to be customary in the dataset already
                     lemma = word.attrib['lemma'].lower() if 'lemma' in word.attrib else text.lower()
                     if lemma[-1] == '?': lemma = lemma[:-1]
                     if '/' in lemma: lemma = lemma.split('/')[0] #we can't deal with disjunctions! just pick the first one
