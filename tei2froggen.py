@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+#optimised for CRM/Corpus Gysseling
+#See also babex.py (Brieven als buit)!
+
 import sys
 import lxml.etree
 
@@ -20,6 +23,9 @@ for filename in sys.argv[1:]:
                     tail = text[-1] + tail
                     text = text[:-1]
                 if text:
+                    if ' ' in text:
+                        print("Removing space in word: ",  text, ,file=sys.stderr)
+                        text = text.replace(' ','')
                     lemma = word.attrib['lemma'].lower() if 'lemma' in word.attrib else text.lower()
                     if lemma[-1] == '?': lemma = lemma[:-1]
                     if '/' in lemma: lemma = lemma.split('/')[0] #we can't deal with disjunctions! just pick the first one
