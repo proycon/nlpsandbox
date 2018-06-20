@@ -24,7 +24,7 @@ for filename in sys.argv[1:]:
                     text = text[:-1]
                 if text:
                     if ' ' in text:
-                        print("Removing space in word: ",  text, ,file=sys.stderr)
+                        print("Removing space in word: ",  text, file=sys.stderr)
                         text = text.replace(' ','')
                     lemma = word.attrib['lemma'].lower() if 'lemma' in word.attrib else text.lower()
                     if lemma[-1] == '?': lemma = lemma[:-1]
