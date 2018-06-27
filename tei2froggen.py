@@ -42,6 +42,9 @@ for filename in sys.argv[1:]:
                     if not pos:
                         print("No pos found for word", text, " .... skipping!",file=sys.stderr)
                         continue
+                    if '+' in lemma: lemma = lemma.replace('+','⊕')
+                    pos = word.attrib['msd']
+                    if '+' in pos: pos = pos.replace('+','⊕')
                     print(text + "\t" + lemma + "\t" + pos)
                 if tail:
                     print(tail + "\t" + tail + "\t" + "LET()")
