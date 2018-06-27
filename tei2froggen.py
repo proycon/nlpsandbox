@@ -35,7 +35,9 @@ for filename in sys.argv[1:]:
                     lemma = word.attrib['lemma'].lower() if 'lemma' in word.attrib else text.lower()
                     if lemma[-1] == '?': lemma = lemma[:-1]
                     if '/' in lemma: lemma = lemma.split('/')[0] #we can't deal with disjunctions! just pick the first one
+                    if '+' in lemma: lemma = lemma.replace('+','⊕')
                     pos = word.attrib['msd']
+                    if '+' in pos: pos = pos.replace('+','⊕')
                     print(text + "\t" + lemma + "\t" + pos)
                 if tail:
                     print(tail + "\t" + tail + "\t" + "LET()")
