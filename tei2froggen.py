@@ -32,10 +32,16 @@ for filename in sys.argv[1:]:
                     if ' ' in text:
                         print("\t\tRemoving space in word: ",  text, file=sys.stderr)
                         text = text.replace(' ','⊔') #seems to be customary in the dataset already
-                    lemma = word.attrib['lemma'].lower() if 'lemma' in word.attrib else text.lower()
-                    if lemma[-1] == '?': lemma = lemma[:-1]
+                    lemma = word.attrib['lemma'].lower().strip() if 'lemma' in word.attrib else text.lower().strip()
+                    if lemma != "?" and lemma[-1] == '?': lemma = lemma[:-1]
+                    if not lemma:
+                        print("No lemma found for word", text, " .... skipping!",file=sys.stderr)
+                        continue
                     if '/' in lemma: lemma = lemma.split('/')[0] #we can't deal with disjunctions! just pick the first one
-                    pos = word.attrib['msd']
+                    pos = word.attrib['msd'].strip()
+                    if not pos:
+                        print("No pos found for word", text, " .... skipping!",file=sys.stderr)
+                        continue
                     print(text + "\t" + lemma + "\t" + pos)
                 if tail:
                     print(tail + "\t" + tail + "\t" + "LET()")
