@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 
+#optimised for CRM/Corpus Gysseling
+#See also babex.py (Brieven als buit)!
+
+from __future__ import print_function, unicode_literals, division, absolute_import
 import sys
 import lxml.etree
 
 
 ns = {"tei": "http://www.tei-c.org/ns/1.0"}
-
 eos = True
 for filename in sys.argv[1:]:
     print("Processing " + filename,file=sys.stderr)
     doc = lxml.etree.parse(filename).getroot()
-    for teidoc in doc.xpath("//TEI", namespaces=ns): #in case input contains multiple docs
-        for word in teidoc.xpath("//tei:w", namespaces=ns):
+    print("\t(loaded)",file=sys.stderr)
+    for teidoc in doc.xpath("//tei:TEI", namespaces=ns): #in case input contains multiple docs
+        print("\t(found document)",file=sys.stderr)
+        for word in teidoc.xpath(".//tei:w", namespaces=ns):
             eos = False
             text = "".join(word.itertext()).strip()
             if text:
@@ -20,10 +25,26 @@ for filename in sys.argv[1:]:
                     tail = text[-1] + tail
                     text = text[:-1]
                 if text:
-                    lemma = word.attrib['lemma'].lower() if 'lemma' in word.attrib else text.lower()
-                    if lemma[-1] == '?': lemma = lemma[:-1]
+                    if '\n' in text:
+                        print("\t\tRemoving newline in word: ",  text.replace('\n',"\\n"), file=sys.stderr)
+                        text = "⊔".join([x.strip() for x in text.split("\n")])
+                        print("\t\t->", text, file=sys.stderr)
+                    if ' ' in text:
+                        print("\t\tRemoving space in word: ",  text, file=sys.stderr)
+                        text = text.replace(' ','⊔') #seems to be customary in the dataset already
+                    lemma = word.attrib['lemma'].lower().strip() if 'lemma' in word.attrib else text.lower().strip()
+                    if lemma != "?" and lemma[-1] == '?': lemma = lemma[:-1]
+                    if not lemma:
+                        print("No lemma found for word", text, " .... skipping!",file=sys.stderr)
+                        continue
                     if '/' in lemma: lemma = lemma.split('/')[0] #we can't deal with disjunctions! just pick the first one
+                    pos = word.attrib['msd'].strip()
+                    if not pos:
+                        print("No pos found for word", text, " .... skipping!",file=sys.stderr)
+                        continue
+                    if '+' in lemma: lemma = lemma.replace('+','⊕')
                     pos = word.attrib['msd']
+                    if '+' in pos: pos = pos.replace('+','⊕')
                     print(text + "\t" + lemma + "\t" + pos)
                 if tail:
                     print(tail + "\t" + tail + "\t" + "LET()")
