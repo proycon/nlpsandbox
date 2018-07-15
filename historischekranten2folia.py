@@ -19,12 +19,13 @@ for filename in sys.argv[1:]:
             body = doc.append(folia.Text(doc, id=docid+".text"))
             div = body.append(folia.Division, id=docid+".div")
             if row['header'].strip():
-                head = div.append(folia.Head, BeautifulSoup(row['header'],'lxml').text, id=docid+".text.head")
+                head = div.append(folia.Head, BeautifulSoup(row['header'].strip(),'lxml').text, id=docid+".text.head")
             if row['subheader'].strip():
-                div.append(folia.Paragraph, BeautifulSoup(row['subheader'], 'lxml').text, id=docid+".text.subheader", cls="subheader")
+                div.append(folia.Paragraph, BeautifulSoup(row['subheader'].strip(), 'lxml').text, id=docid+".text.subheader", cls="subheader")
             for i, partext in enumerate(row['article_text'].split('\n\n')):
-                partext = BeautifulSoup(partext.replace("=\n","").replace("\n"," "), "lxml").text
-                paragraph = div.append(folia.Paragraph, partext, id=docid+".text.p." + str(i+1), cls="normal")
+                partext = BeautifulSoup(partext.replace("=\n","").replace("\n"," "), "lxml").text.strip()
+                if partext:
+                    paragraph = div.append(folia.Paragraph, partext, id=docid+".text.p." + str(i+1), cls="normal")
             doc.save(docid + ".folia.xml")
 
 
